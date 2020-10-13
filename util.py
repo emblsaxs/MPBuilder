@@ -256,23 +256,20 @@ def builderNanodisc(protein, scaffold, membrane, prefixName):
     center("tmp_memb")
     center("tmp_scaffold")
     cmd.pseudoatom("origin0", pos=[0,0,0])
-
-    print(f"State of empty/not-empty: {empty}")
-    if empty == False:
-        avXY = TMdistCheck("tmp_prot", 0.2)
-        minXY = avXY/2.0
-        # remove lipids inside pore
-        cmd.remove(f"tmp_memb within {minXY} of origin0")
-        print(f"Mean distance if TM cross-section in xy plane: {avXY}")
-
     cmd.origin("origin0")
     outRadius = findAverDist("tmp_scaffold")
     print(f"Max distance from origin to scaffold in xy plane: {outRadius}")
-
     # remove lipids beyond border encased by MSP
-    print(f"org and tmp_memb beyond {outRadius} of origin0")
     cmd.remove(f"org and tmp_memb beyond {outRadius} of origin0")
-    # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
+    print(f"State of empty/not-empty: {empty}")
+    # remove lipids clashing with tmp_protein core
+    if not empty:
+        avXY = TMdistCheck("tmp_prot", 0.2)
+        minXY = avXY/2.0
+        # remove lipids inside pore
+        cmd.remove(f"org and tmp_memb within {minXY} of origin0")
+        print(f"Mean distance if TM cross-section in xy plane: {avXY}")
+
     if empty:
         cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
         s = f"{prefixName}empty_{membrane}_{scaffold}"
