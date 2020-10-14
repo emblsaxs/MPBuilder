@@ -111,6 +111,7 @@ class mpbuilder():
             self.form.input_filename_prot.setEnabled(True)
             self.form.btn_browse_prot.setEnabled(True)
             self.form.first_angle_label.setEnabled(True)
+            self.form.first_angle_label.setText("Offset along Z-axis (A)")
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
@@ -123,10 +124,10 @@ class mpbuilder():
             self.form.filename_scaffold_label.setText("Filename(Scaffold)")
             self.form.input_filename_scaffold.setEnabled(True)
             self.form.btn_browse_scaffold.setEnabled(True)
-            self.form.number_scaffold_label.setEnabled(True)
-            self.form.input_scaffold_number_min.setEnabled(True)
-            self.form.input_scaffold_number_max.setEnabled(True)
-            self.form.input_scaffold_number_step.setEnabled(True)
+            self.form.number_scaffold_label.setEnabled(False)
+            self.form.input_scaffold_number_min.setEnabled(False)
+            self.form.input_scaffold_number_max.setEnabled(False)
+            self.form.input_scaffold_number_step.setEnabled(False)
             self.form.second_angle_label.setEnabled(False)
             self.form.input_rotAng_step_2.setEnabled(False)
             self.form.input_rotAng_min_2.setEnabled(False)
@@ -282,14 +283,13 @@ class mpbuilder():
         rot_step_ang = self.form.input_rotAng_step.value()
         # type of protein-membrane assembly
         if assemblyType == "detergent":
-
             dens_min_ang = self.form.input_rotAng_min_2.value()
             dens_max_ang = self.form.input_rotAng_max_2.value() + 1
             dens_step_ang = self.form.input_rotAng_step_2.value()
             bestModel, fit = crysolRefinementDetergent(rot_min_ang, rot_max_ang,rot_step_ang, \
-                                      dens_min_ang,dens_max_ang,dens_step_ang, \
-                                      self.protName, self.membName, self.dataName,\
-                                      prefixName)
+                                                       dens_min_ang,dens_max_ang,dens_step_ang, \
+                                                       self.protName, self.membName, self.dataName,\
+                                                       prefixName)
 
 
         elif assemblyType == "salipro":
@@ -302,10 +302,21 @@ class mpbuilder():
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
             bestModel, fit = crysolRefinementSalipro(rot_min_ang, rot_max_ang,rot_step_ang, \
-                                      scaffold_min,scaffold_max,scaffold_step, \
-                                      self.protName, self.membName, self.scafName,self.dataName,\
+                                                     scaffold_min,scaffold_max,scaffold_step, \
+                                                     self.protName, self.membName, self.scafName,self.dataName,\
+                                                     prefixName)
+        elif assemblyType == "nanodisc":
+            cmd.reset()
+            z_min  = self.form.input_rotAng_min.value()
+            z_max  = self.form.input_rotAng_max.value() + 1
+            z_step = self.form.input_rotAng_step.value()
+            if (self.buildMemb):
+                self.membName = builderMembrane(self.membName)
+                self.form.input_filename_lip.setText(self.membName)
+            refresh()
+            bestModel, fit = crysolRefinementNanodisc(z_min, z_max, z_step, \
+                                                      self.protName, self.membName, self.scafName, self.dataName,\
                                                       prefixName)
-
         else:
             print(f"Refinement is not supported for assembly type {assemblyType}")
             return
@@ -351,7 +362,7 @@ class mpbuilder():
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             #  execute builder
-            self.modelName = builderNanodisc(self.protName, self.scafName, self.membName, prefixName)
+            self.modelName = builderNanodisc(self.protName, self.membName, self.scafName, prefixName)
 
         elif assemblyType == "bilayer":
             # execute detergent builder
