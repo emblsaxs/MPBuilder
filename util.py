@@ -149,6 +149,40 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
     print(f"Chi^2 : {res['chi2']} Best model name : {best}")
     return best, fitBest
 
+    # run crysol in fit mode for nanodisc
+def crysolRefinementNanodisc(z_min, z_max, z_step, \
+                              protName, membName, scafName, dataName, prefixName):
+    '''Refine the membrane protein detergent complex against experimental data'''
+    zs = np.arange(z_min, z_max, z_step)
+    res = {"angle": -9999, "number-of-scaffolds": -9999, "chi2": 9999}
+    with tempdir.TemporaryDirectory() as tmpdir:
+        # copy data file
+        tmpdir.copy_in(dataName)
+        best = ""
+        fitBest = ""
+
+        for counter1, z in enumerate(zs):
+            cmd.refresh()
+            modelName = builderNanodisc(protName, membName, scafName, prefixName, z, True)
+            cmd.save(modelName + ".pdb", modelName)
+            fit, fitResult = fitcrysol(modelName, dataName, "yes", False)
+            cmd.wizard("message",
+                       f"Refinement: {counter1 } out of {len(zs)} steps."
+                       f"Chi2: {fitResult['chi2']}")
+            # if model fits better - store it
+            if float(fitResult['chi2']) < float(res['chi2']):
+                if best != "": cmd.delete(best)
+                res['chi2'] = fitResult['chi2']
+                res['vertical-offset'] = z
+                best = modelName
+                fitBest = fit
+            else:
+                cmd.delete(modelName)
+        tmpdir.move_out(best + ".pdb")
+        tmpdir.move_out(fitBest)
+    print(f"Best model: Vertical Offset : {res['vertical-offset']}")
+    print(f"Chi^2 : {res['chi2']} Best model name : {best}")
+    return best, fitBest
 
 def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngle=45, refine = False):
     """
@@ -238,7 +272,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
 
     return s
 
-def builderNanodisc(protein, scaffold, membrane, prefixName):
+def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine = False):
     """
     builds a MP-nanodisc systems
     scaffold in this case is a double belt of MSP
@@ -256,30 +290,28 @@ def builderNanodisc(protein, scaffold, membrane, prefixName):
     center("tmp_memb")
     center("tmp_scaffold")
     cmd.pseudoatom("origin0", pos=[0,0,0])
-
+    cmd.origin("origin0")
+    outRadius = findAverDist("tmp_scaffold")
+    cmd.translate(f"[0,0,{offset}]", f"tmp_scaffold")
+    print(f"Max distance from origin to scaffold in xy plane: {outRadius}")
+    # remove lipids beyond border encased by MSP
+    cmd.remove(f"org and tmp_memb beyond {outRadius} of origin0")
     print(f"State of empty/not-empty: {empty}")
-    if empty == False:
+    # remove lipids clashing with tmp_protein core
+    if not empty:
         avXY = TMdistCheck("tmp_prot", 0.2)
         minXY = avXY/2.0
         # remove lipids inside pore
-        cmd.remove(f"tmp_memb within {minXY} of origin0")
+        cmd.remove(f"org and tmp_memb within {minXY} of origin0")
         print(f"Mean distance if TM cross-section in xy plane: {avXY}")
 
-    cmd.origin("origin0")
-    outRadius = findAverDist("tmp_scaffold")
-    print(f"Max distance from origin to scaffold in xy plane: {outRadius}")
-
-    # remove lipids beyond border encased by MSP
-    print(f"org and tmp_memb beyond {outRadius} of origin0")
-    cmd.remove(f"org and tmp_memb beyond {outRadius} of origin0")
-    # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
     if empty:
         cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
         s = f"{prefixName}empty_{membrane}_{scaffold}"
     else:
         cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
         s = f"{prefixName}{protein}_{membrane}_{scaffold}"
-
+    if refine: s += str(int(offset))
     cmd.create(s,f"({protein},tmp_scaffold, tmp_memb)")
     cmd.save(s + ".pdb", s)
 
