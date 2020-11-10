@@ -7,7 +7,10 @@ import numpy as np
 from . import tempdir
 import os
 import random
-
+from sys import platform
+viewer = 'primus'
+if platform == 'win32' or platform == 'win64':
+    viewer = 'primusqt'
 
 # run crysol in predictive mode for a given selection
 def predcrysol(modelName, crycalc):
@@ -67,7 +70,7 @@ def fitcrysol(modelName, dataName, crycalc,  showFit):
     print("CRYSOL Chi-square = " + repr(chi2))
     print("CRYSOL Average electron density = " + repr(eDens))
     if showFit:
-        systemCommand(["primus", fit])
+        systemCommand([viewer, fit])
     return fit, fitResult
 
 def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang, \

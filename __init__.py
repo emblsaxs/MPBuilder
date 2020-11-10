@@ -19,6 +19,11 @@ from pymol import cmd
 from pymol.Qt import QtWidgets
 from pymol.Qt.utils import loadUi
 
+from sys import platform
+viewer = 'primus'
+if platform == 'win32' or platform == 'win64':
+    viewer = 'primusqt'
+
 def __init_plugin__(app=None):
     '''
     Add an entry to the PyMOL "Plugin" menu
@@ -249,7 +254,7 @@ class mpbuilder():
             df = predcrysol(self.modelName, "yes")
             if os.path.exists(df):
                 print('Theoretical SAXS profile generated')
-                systemCommand(["primus", df])
+                systemCommand([viewer, df])
                 self.prediction = df
         else:
             print(f'pdb file is missing. Model Name: {self.modelName}')
@@ -326,7 +331,7 @@ class mpbuilder():
         refresh()
         t = round((seconds_tmp - seconds_init), 2)
         print(f"{t} seconds consumed.")
-        systemCommand(["primus", self.fit])
+        systemCommand([viewer, self.fit])
 
     def run_build(self):
         #callback for the "Build" button
