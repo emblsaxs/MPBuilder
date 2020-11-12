@@ -333,7 +333,8 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     # Checking object names
     print(f'protein   is: {protein}')
     print(f'detergent is: {detergent}')
-    center(detergent)
+    cmd.copy("tmp_deter", detergent) # store initial
+    center("tmp_deter")
     #if it is an empty assembly --> build a micelle
     if protein == None:
         # table with common empty micelle parameters
@@ -342,17 +343,16 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
             radius             =  ang
             numberOfDetergents =  densAng
         else:
-            radius             =  findMaxDist(detergent)
+            radius             =  findMaxDist("tmp_deter")
             numberOfDetergents = 300
-        s = builderMicelle(detergent, radius, numberOfDetergents)
+        s = builderMicelle("tmp_deter", radius, numberOfDetergents)
         cmd.save(s + ".pdb", s)
         return s
 
     cmd.copy("tmp_prot", protein)  # store initial
-    cmd.pseudoatom("origin0", pos=[0,0,0])
     # Determine max distance of TM cross-section (xy plane)
     r        = TMdistCheck("tmp_prot", 2.0)
-    detR     = findMaxDist(detergent)
+    detR     = findMaxDist("tmp_deter")
     print(f"Max distance if TM cross-section is in a xy plane: {r}")
     print(f"Max distance of detergent : {detR}")
     
@@ -378,18 +378,20 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         # geometrical
         theta       = range (-10, 19, 3)
         phi          = range(0, 361, 10)   # find angular step from average density?
-    builderCorona(theta, phi, detergent, r, detR)
+    builderCorona(theta, phi, "tmp_deter", r, detR)
+
     # combine components into single PYMOL object
     if prefixName is not "" : s = f"{prefixName}"
     if refine:
         s = f"{protein}_{detergent}_{(int)(ang)}_{(int)(densAng)}"
     else:
-        s = f"{protein}_{detergent}"
+        s = f"{protein}_complex_with_{detergent}"
 
     #affineStretch("corona", 1.1)
-    cmd.create(s, f"{protein}, corona")
+    cmd.create(s, f"({protein}, corona)")
     cmd.delete("corona")
     cmd.delete("tmp_prot")
+    cmd.delete("tmp_deter")
     cmd.delete("origin0")
     cmd.save(s + ".pdb", s)
     return s
@@ -424,6 +426,7 @@ def builderMicelle(detergent, r, numberOfDetergents):
 
 def builderCorona(theta, fi, detergent, r, detR):
     # Build symmates with desired rotations
+    refresh()
     thetaSteps = len(theta)
     angleVer = np.linspace(-90, 90, thetaSteps)
     i = 0
@@ -583,8 +586,9 @@ def TMdistCheck(selection, z):
                 dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
                 dlist.append(dist)
         dmax.append(max(dlist))
-    cmd.rotate('z', -180, selection)
+        cmd.rotate('z', -ang, selection)
     meanXY = np.mean(dmax)
+    cmd.pseudoatom("origin0", pos=[0,0,0])
     return meanXY
 
 def refresh():
@@ -599,8 +603,8 @@ def findMaxDist(selection):
     finds the longest distance within a molecule
     """
     dlist = []
-    for at1 in cmd.index(selection):
-        for at2 in cmd.index(selection):
+    for at1 in cmd.index(selection)[::10]:
+        for at2 in cmd.index(selection)[::10]:
             dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
             dlist.append(dist)
     dmax = max(dlist)

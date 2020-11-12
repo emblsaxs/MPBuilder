@@ -335,6 +335,12 @@ class mpbuilder():
 
     def run_build(self):
         #callback for the "Build" button
+        if self.membName == None:
+            print("Please provide a detegent PDB file!")
+            return
+        if self.protName == None:
+            print("Please provide a membrane protein PDB file!")
+            return
         seconds_init = time.time()
         # get form data
         prefixName = self.form.output_filename_prefix.text()
