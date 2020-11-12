@@ -92,7 +92,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang, \
                 cmd.refresh()
                 modelName = builderSalipro(protName, scafName, membName, prefixName, num, ang, True)
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, dataName, "yes", False)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
                 cmd.wizard("message",
                            f"Refinement: {counter2 + counter1 * (len(numScaffoldCopies))} "
                            f"out of {len(numScaffoldCopies) * len(angs)} steps. Chi2: {fitResult['chi2']}")
@@ -132,7 +132,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
                 cmd.refresh()
                 modelName = builderDetergent(protName, membName, prefixName, ang, densAng, True)
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, dataName, "yes", False)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
                 cmd.wizard("message",
                            f"Refinement: {counter2 + counter1 * (len(dens))} out of {len(dens) * len(angs)} steps."
                            f"Chi2: {fitResult['chi2']}")
@@ -168,7 +168,7 @@ def crysolRefinementNanodisc(z_min, z_max, z_step, \
             cmd.refresh()
             modelName = builderNanodisc(protName, membName, scafName, prefixName, z, True)
             cmd.save(modelName + ".pdb", modelName)
-            fit, fitResult = fitcrysol(modelName, dataName, "yes", False)
+            fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
             cmd.wizard("message",
                        f"Refinement: {counter1 } out of {len(zs)} steps."
                        f"Chi2: {fitResult['chi2']}")

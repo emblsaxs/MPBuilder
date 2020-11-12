@@ -29,7 +29,7 @@ class TemporaryDirectory:
                If not present, same as the source file name
         """
         if dst is None:
-            dst = src
+            dst = os.path.basename(src)
         if os.path.isabs(dst):
             raise ValueError("Destination path should not be absolute")
         abs_src = os.path.join(self.orig_dir, src)
