@@ -397,6 +397,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     return s
 
 def builderMicelle(detergent, r, numberOfDetergents):
+    refresh()
     i = 0
     numberOfDetergents = (int)(numberOfDetergents)
     #FIXME: if number of detergents > 360, molecules may clash in space
@@ -446,7 +447,7 @@ def builderMembrane(lipid):
     """
     build membrane bilayer from single lipid PDB file
     """
-    ###FIXME: add protein to the model and change the modelName if not empty. Otherwise call the model "{protein}_{lipid}"
+    refresh()
     cmd.load(lipid+".pdb", "start_lipid")
     cmd.alter("start_lipid", "chain = 'X'")
     cmd.alter("start_lipid", "segi = 'mema'")
