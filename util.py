@@ -525,12 +525,12 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
     print(f"Max distance if TM cross-section is in a xy plane: {r}")
     print(f"Max distance of detergent : {detR}")
 
-    # Shrink detergent along z axis to match ry
-    stretch = r / detR
-    affineStretch("tmp_deter", stretch)
+    ## Shrink detergent along z axis to match ry
+    #stretch = r / detR
+    #affineStretch("tmp_deter", stretch)
     # find new
-    detR = detR * stretch
-    print(f"Max distance of detergent after shrinking: {detR}")
+    #detR = detR * stretch
+    #print(f"Max distance of detergent after shrinking: {detR}")
     # Create a ring of detergents using spherical coordinates
     # FIXME: find automatically?
     if refine:
