@@ -258,12 +258,13 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
 
     # Combine into a single PyMol object
     if empty == True:
-        s = f"{prefixName}empty_{membrane}_{scaffold}_{(int)(initRotAngle)}"
+        s = f"empty_{membrane}_{scaffold}_{(int)(initRotAngle)}"
     else:
-        s = f"{prefixName}{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}"
+        s = f"{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}"
     if refine:
-        s = f"{prefixName}{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}_{(int)(n_sym)}"
-
+        s = f"{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}_{(int)(n_sym)}"
+    if prefixName:
+        s = f"{prefixName}{s}"
     cmd.create(s, f"{protein}, tmp_memb, seg*")
     cmd.save(s + ".pdb", s)
 
@@ -310,11 +311,13 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
 
     if empty:
         cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
-        s = f"{prefixName}empty_{membrane}_{scaffold}"
+        s = f"empty_{membrane}_{scaffold}"
     else:
         cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
-        s = f"{prefixName}{protein}_{membrane}_{scaffold}"
+        s = f"{protein}_{membrane}_{scaffold}"
     if refine: s += str(int(offset))
+    if prefixName:
+        s = f"{prefixName}{s}"
     cmd.create(s,f"({protein},tmp_scaffold, tmp_memb)")
     cmd.save(s + ".pdb", s)
 
@@ -381,12 +384,12 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     builderCorona(theta, phi, "tmp_deter", r, detR)
 
     # combine components into single PYMOL object
-    if prefixName is not "" : s = f"{prefixName}"
     if refine:
         s = f"{protein}_{detergent}_{(int)(ang)}_{(int)(densAng)}"
     else:
         s = f"{protein}_complex_with_{detergent}"
-
+    if prefixName:
+        s = f"{prefixName}{s}"
     #affineStretch("corona", 1.1)
     cmd.create(s, f"({protein}, corona)")
     cmd.delete("corona")
