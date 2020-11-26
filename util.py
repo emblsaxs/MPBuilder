@@ -417,6 +417,7 @@ def builderMicelle(detergent, r, numberOfDetergents):
     for t, p in zip(theta, phi):
         i += 1
         cmd.copy(f"seg{i}", detergent)
+        cmd.alter(f"seg{i}", f"resi={i}") # assign residue numbers
         # randomly sample on a sphere
         cmd.translate(f"[0,{r},0]", f"seg{i}")
         cmd.rotate("x", f"{t}", f"seg{i}")
@@ -440,6 +441,7 @@ def builderCorona(theta, fi, detergent, r, detR):
         for f in fi:
             i += 1
             cmd.copy(f"seg{i}", detergent)
+            cmd.alter(f"seg{i}", f"resi={i}") # assign residue numbers
             # corona
             cmd.rotate("x", f"{a}", f"seg{i}")
             cmd.translate(f"[0,{r + 0.5*detR*np.cos(np.deg2rad(a))},0]", f"seg{i}")
