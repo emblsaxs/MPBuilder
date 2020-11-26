@@ -205,7 +205,8 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     # copies to delete later
     cmd.copy("tmp_scaffold",scaffold) # store initial
     cmd.copy("tmp_memb",membrane) # store initial
-    cmd.copy("tmp_prot",protein) # store initial
+    if not empty:
+        cmd.copy("tmp_prot",protein) # store initial
     center("tmp_memb")
     center("tmp_scaffold")
     cmd.pseudoatom("origin0", pos=[0,0,0])
@@ -218,7 +219,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
         avXY  = TMdistCheck("tmp_prot", 0.2)
         radXY = avXY / 2.0
         # remove lipids inside pore
-        cmd.remove(f"tmp_memb within {radXY} of origin0")
+        cmd.remove(f"br. org and tmp_memb within {radXY} of origin0")
         r_lipHead = 4.7  # Area(POPC) = 65 A^2 => radius = sqrt(A/pi); reasonable estimate
         numLipLayers = 2.0  # number of lipid layers between TM of core and Saposin tmp_scaffold
         inRadius = avXY + numLipLayers*r_lipHead + t_sap  # equatorial position of tmp_scaffold center of mass
@@ -290,7 +291,8 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
     # copies to delete later
     cmd.copy("tmp_scaffold",scaffold) # store initial
     cmd.copy("tmp_memb",membrane) # store initial
-    cmd.copy("tmp_prot",protein) # store initial
+    if not empty:
+        cmd.copy("tmp_prot",protein) # store initial
     center("tmp_memb")
     center("tmp_scaffold")
     cmd.pseudoatom("origin0", pos=[0,0,0])
@@ -299,21 +301,21 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
     cmd.translate(f"[0,0,{offset}]", f"tmp_scaffold")
     print(f"Max distance from origin to scaffold in xy plane: {outRadius}")
     # remove lipids beyond border encased by MSP
-    cmd.remove(f"org and tmp_memb beyond {outRadius} of origin0")
+    cmd.remove(f"br. org and tmp_memb beyond {outRadius} of origin0")
     print(f"State of empty/not-empty: {empty}")
     # remove lipids clashing with tmp_protein core
     if not empty:
         avXY = TMdistCheck("tmp_prot", 0.2)
         minXY = avXY/2.0
         # remove lipids inside pore
-        cmd.remove(f"org and tmp_memb within {minXY} of origin0")
+        cmd.remove(f"br. org and tmp_memb within {minXY} of origin0")
         print(f"Mean distance if TM cross-section in xy plane: {avXY}")
 
     if empty:
-        cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
+        cmd.remove("br. org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
         s = f"empty_{membrane}_{scaffold}"
     else:
-        cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
         s = f"{protein}_{membrane}_{scaffold}"
     if refine: s += str(int(offset))
     if prefixName:
@@ -514,14 +516,18 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
     print(f'membrane  is: {membrane}')
     print(f'detergent is: {detergent}')
 
-    cmd.copy("tmp_prot", protein)  # store initial
+    empty = False
+    if protein == None: empty = True
+    # copies to delete later
     cmd.copy("tmp_memb", membrane)  # store initial
     cmd.copy("tmp_deter", detergent)  # store initial
+    if not empty:
+        cmd.copy("tmp_prot", protein)  # store initial
+    # center("tmp_prot")
     center("tmp_memb")
     center("tmp_deter")
     cmd.pseudoatom("origin0", pos=[0, 0, 0])
 
-    center("tmp_prot")
     # Determine max distance of TM cross-section (xy plane)
     r = TMdistCheck("tmp_prot", 2.0)
     detR = findMaxDist("tmp_deter")
@@ -554,13 +560,13 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
     builderCorona(theta, phi, "tmp_deter", r, detR)
     affineStretch("corona", 1.1)
     # remove lipids inside pore
-    cmd.remove(f"tmp_memb within {r/2.0} of origin0")
+    cmd.remove(f"br. org and tmp_memb within {r/2.0} of origin0")
     cmd.origin("origin0")
     # remove lipids beyond border encased by MSP
     print(f"org and tmp_memb beyond {r} of origin0")
     cmd.remove(f"org and tmp_memb beyond {r} of origin0")
     # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
-    cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+    cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
     s = f"{prefixName}{protein}_{membrane}_{detergent}"
 
     cmd.create(s,f"({protein}, corona, tmp_memb)")
