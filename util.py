@@ -140,8 +140,8 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
                 cmd.save(modelName + ".pdb", modelName)
                 fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
                 cmd.wizard("message",
-                           "Refinement: {} ".format(counter2 + counter1 * (len(numScaffoldCopies))) +
-                           " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['chi2']))
+                           "Refinement: {} ".format(counter2 + counter1 * (len(dens))) +
+                           " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['chi2']))
                 # if model fits better - store it
                 if float(fitResult['chi2']) < float(res['chi2']):
                     if best != "": cmd.delete(best)
