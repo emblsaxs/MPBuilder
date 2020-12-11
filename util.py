@@ -390,14 +390,14 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         #theta = random.sample(range(-ang, ang), 10)
         #phi = random.sample(range(0, 360), densAng)
         # geometrical
-        theta = np.arange(-ang, ang + 1, 3)
+        theta = np.arange(-ang, 2*ang - 1, 3)
         phi    = np.arange(0, 361, densAng)
     else:
         # stochastic
         #theta = random.sample(range(-20, 20), 10)
         #phi = random.sample(range(0, 361), 100)
         # geometrical
-        theta       = range (-10, 19, 3)
+        theta       = range (-14, 14, 3)
         phi          = range(0, 361, 10)   # find angular step from average density?
     builderCorona(theta, phi, "tmp_deter", r, detR)
 
@@ -571,8 +571,8 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
         # theta = random.sample(range(-20, 20), 10)
         # phi = random.sample(range(0, 361), 100)
         # geometrical
-        theta = range(-20, 21, 5)
-        phi = range(0, 361, 5)  # find angular step from average density?
+        theta        = range (-14, 14, 3)
+        phi          = range(0, 361, 10)   # find angular step from average density?
 
     builderCorona(theta, phi, "tmp_deter", r, detR)
     affineStretch("corona", 1.1)
