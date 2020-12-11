@@ -653,7 +653,7 @@ def parseCrysolLog(logFileName):
     # will not parse crysol_summary.txt, but the .log file
     # created for each individual run
 
-    chi2 = -9999;
+    chi2 = 9999;
     Rg = -9999;
     eDens = -9999;
 
