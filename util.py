@@ -390,7 +390,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         #theta = random.sample(range(-ang, ang), 10)
         #phi = random.sample(range(0, 360), densAng)
         # geometrical
-        theta = np.arange(-ang, 2*ang - 1, 3)
+        theta = np.arange(-ang, ang, 3)
         phi    = np.arange(0, 361, densAng)
     else:
         # stochastic
@@ -564,8 +564,8 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
         # theta = random.sample(range(-ang, ang), 10)
         # phi = random.sample(range(0, 360), densAng)
         # geometrical
-        theta = np.arange(-ang, ang + 1, 5)
-        phi = np.arange(0, 360, densAng)
+        theta = np.arange(-ang, ang, 3)
+        phi = np.arange(0, 361, densAng)
     else:
         # stochastic
         # theta = random.sample(range(-20, 20), 10)
