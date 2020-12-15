@@ -38,8 +38,7 @@
     <string notr="true">background-color: #000;color:white; padding: 20px</string>
    </property>
    <property name="text">
-    <string notr="true">PyMOL Membrane Protein Builder Plugin
-Based on &quot;PyMOL Rendering Plugin&quot;</string>
+    <string notr="true"/>
    </property>
    <property name="textFormat">
     <enum>Qt::PlainText</enum>
@@ -788,6 +787,8 @@ Based on &quot;PyMOL Rendering Plugin&quot;</string>
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="icon.qrc"/>
+ </resources>
  <connections/>
 </ui>

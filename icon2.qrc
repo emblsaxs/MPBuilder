@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icon2Pref">
+    <file>big_mpbuilder_ic2.png</file>
+  </qresource>
+</RCC>
