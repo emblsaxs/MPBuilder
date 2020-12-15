@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string notr="true">PyMOL Membrane Builder Plugin</string>
   </property>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="icon">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -34,8 +34,11 @@
      <height>60</height>
     </size>
    </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
    <property name="styleSheet">
-    <string notr="true">background-color: #000;color:white; padding: 20px</string>
+    <string notr="true">border-image: url(:/icon2Pref/big_mpbuilder_ic2.png) 0 0 0 0 stretch stretch;</string>
    </property>
    <property name="text">
     <string notr="true"/>
@@ -51,6 +54,9 @@
    </property>
   </widget>
   <widget class="QTabWidget" name="Build">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>14</x>
@@ -60,7 +66,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="Build_2">
     <attribute name="title">
@@ -92,7 +98,7 @@
       </rect>
      </property>
      <property name="text">
-      <string notr="true">Filename(Prot)</string>
+      <string notr="true">Protein</string>
      </property>
     </widget>
     <widget class="QPushButton" name="button_crysol_predict">
@@ -131,6 +137,9 @@
      </property>
     </widget>
     <widget class="QDoubleSpinBox" name="input_rotAng">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>337</x>
@@ -147,6 +156,9 @@
      </property>
     </widget>
     <widget class="QLabel" name="filename_scaffold_label">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -156,7 +168,7 @@
       </rect>
      </property>
      <property name="text">
-      <string notr="true">Filename(Scaffold)</string>
+      <string notr="true">Scaffold</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="input_filename_prot">
@@ -199,6 +211,9 @@
      </property>
     </widget>
     <widget class="QLabel" name="copies_scaffold_label">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -224,7 +239,7 @@
       </rect>
      </property>
      <property name="text">
-      <string notr="true">Filename(Detergent/bilayer)</string>
+      <string notr="true">Detergent/Bilayer</string>
      </property>
     </widget>
     <widget class="QPushButton" name="btn_browse_prot">
@@ -241,6 +256,9 @@
      </property>
     </widget>
     <widget class="QSpinBox" name="input_copies">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>179</x>
@@ -263,6 +281,9 @@
      </property>
     </widget>
     <widget class="QLineEdit" name="input_filename_scaffold">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>179</x>
@@ -276,11 +297,14 @@
      </property>
     </widget>
     <widget class="QLabel" name="label_2">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>20</x>
        <y>12</y>
-       <width>145</width>
+       <width>291</width>
        <height>19</height>
       </rect>
      </property>
@@ -289,6 +313,9 @@
      </property>
     </widget>
     <widget class="QPushButton" name="btn_browse_scaffold">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>331</x>
@@ -396,6 +423,9 @@
       </item>
       <item row="0" column="1">
        <widget class="QCheckBox" name="checkBox_prebuild_bilayer">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use a previously generated membrane bilayer, or leave unchecked to generate a new bilayer&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
@@ -530,6 +560,9 @@
      </property>
     </widget>
     <widget class="QLabel" name="number_scaffold_label">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -614,9 +647,6 @@
      <property name="decimals">
       <number>0</number>
      </property>
-     <property name="minimum">
-      <double>-1000.000000000000000</double>
-     </property>
      <property name="maximum">
       <double>1000.000000000000000</double>
      </property>
@@ -644,6 +674,9 @@
      </property>
     </widget>
     <widget class="QDoubleSpinBox" name="input_scaffold_number_max">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>350</x>
@@ -656,13 +689,16 @@
       <number>0</number>
      </property>
      <property name="maximum">
-      <double>99.000000000000000</double>
+      <double>20.000000000000000</double>
      </property>
      <property name="value">
       <double>3.000000000000000</double>
      </property>
     </widget>
     <widget class="QDoubleSpinBox" name="input_scaffold_number_min">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>280</x>
@@ -685,6 +721,9 @@
      </property>
     </widget>
     <widget class="QDoubleSpinBox" name="input_scaffold_number_step">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>420</x>
@@ -697,7 +736,7 @@
       <number>0</number>
      </property>
      <property name="maximum">
-      <double>99.000000000000000</double>
+      <double>10.000000000000000</double>
      </property>
      <property name="value">
       <double>1.000000000000000</double>
@@ -766,7 +805,7 @@
     <item>
      <widget class="QLabel" name="label_13">
       <property name="text">
-       <string notr="true">Filename(data)</string>
+       <string notr="true">SAXS data: </string>
       </property>
      </widget>
     </item>
@@ -788,7 +827,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="icon.qrc"/>
+  <include location="icon2.qrc"/>
  </resources>
  <connections/>
 </ui>
