@@ -61,7 +61,7 @@ Based on &quot;PyMOL Rendering Plugin&quot;</string>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="Build_2">
     <attribute name="title">
@@ -615,6 +615,9 @@ Based on &quot;PyMOL Rendering Plugin&quot;</string>
      <property name="decimals">
       <number>0</number>
      </property>
+     <property name="minimum">
+      <double>-1000.000000000000000</double>
+     </property>
      <property name="maximum">
       <double>1000.000000000000000</double>
      </property>
@@ -654,7 +657,7 @@ Based on &quot;PyMOL Rendering Plugin&quot;</string>
       <number>0</number>
      </property>
      <property name="maximum">
-      <double>20.000000000000000</double>
+      <double>99.000000000000000</double>
      </property>
      <property name="value">
       <double>3.000000000000000</double>
@@ -695,7 +698,7 @@ Based on &quot;PyMOL Rendering Plugin&quot;</string>
       <number>0</number>
      </property>
      <property name="maximum">
-      <double>10.000000000000000</double>
+      <double>99.000000000000000</double>
      </property>
      <property name="value">
       <double>1.000000000000000</double>

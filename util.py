@@ -159,40 +159,43 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
     return best, fitBest
 
     # run crysol in fit mode for nanodisc
-def crysolRefinementNanodisc(z_min, z_max, z_step, \
+def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step, \
                               protName, membName, scafName, dataName, prefixName):
     '''Refine the membrane protein detergent complex against experimental data'''
-    zs = np.arange(z_min, z_max, z_step)
-    res = {"angle": -9999, "number-of-scaffolds": -9999, "chi2": 9999}
+    xs = np.arange(x_min, x_max, x_step)
+    ys = np.arange(y_min, y_max, y_step)
+    res = {"x-offset": -9999, "y-offset": -9999, "chi2": 9999}
     with tempdir.TemporaryDirectory() as tmpdir:
         # copy data file
         tmpdir.copy_in(dataName)
         best = ""
         fitBest = ""
 
-        for counter1, z in enumerate(zs):
-            cmd.refresh()
-            modelName = builderNanodisc(protName, membName, scafName, prefixName, z, True)
-            if modelName == "bad model": 
-                print("Bad model parameters: " + str(z))
-                continue
-            cmd.save(modelName + ".pdb", modelName)
-            fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
-            cmd.wizard("message",
-                       "Refinement: {} out of {} steps.".format(counter1, len(zs)) +
-                       " Chi2: {}".format(fitResult['chi2']))
-            # if model fits better - store it
-            if float(fitResult['chi2']) < float(res['chi2']):
-                if best != "": cmd.delete(best)
-                res['chi2'] = fitResult['chi2']
-                res['vertical-offset'] = z
-                best = modelName
-                fitBest = fit
-            else:
-                cmd.delete(modelName)
+        for counter1, x in enumerate(xs):
+            for counter2, y in enumerate(ys):
+                cmd.refresh()
+                modelName = builderNanodisc(protName, membName, scafName, prefixName, x, y, True)
+                if modelName == "bad model": 
+                    print("Bad model parameters: " + str(z))
+                    continue
+                cmd.save(modelName + ".pdb", modelName)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
+                cmd.wizard("message",
+                           "Refinement: {} ".format(counter2 + counter1 * (len(ys))) +
+                           " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['chi2']))
+                # if model fits better - store it
+                if float(fitResult['chi2']) < float(res['chi2']):
+                    if best != "": cmd.delete(best)
+                    res['chi2'] = fitResult['chi2']
+                    res['x-offset'] = x
+                    res['y-offset'] = y
+                    best = modelName
+                    fitBest = fit
+                else:
+                    cmd.delete(modelName)
         tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
-    print("Best model: Vertical Offset : {}".format(res['vertical-offset']))
+    print("Best model: Offset coordinates in XY plane : ({},{})".format(res['x-offset'],res['y-offset']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
 
@@ -289,7 +292,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
 
     return s
 
-def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine = False):
+def builderNanodisc(protein, membrane, scaffold, prefixName, x = 0, y = 0,  refine = False):
     """
     builds a MP-nanodisc systems
     scaffold in this case is a double belt of MSP
@@ -302,6 +305,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
     if protein == None: empty = True
     if not empty:
         cmd.copy("tmp_prot",protein) # store initial
+        cmd.translate("[{},{},0]".format(x, y), "tmp_prot")
     print("State of empty/not-empty: {}".format(empty))
     # copies to delete later
     cmd.copy("tmp_scaffold",scaffold) # store initial
@@ -312,7 +316,6 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
     cmd.pseudoatom("origin0", pos=[0,0,0])
     cmd.origin("origin0")
     outRadius = findAverDist("tmp_scaffold")
-    cmd.translate("[0,0,{}]".format(offset), "tmp_scaffold")
     print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
     cmd.remove("org and tmp_memb beyond {} of origin0".format(outRadius))
@@ -332,7 +335,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine 
     else:
         cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
         s = "{}_{}_{}".format(protein, membrane, scaffold)
-    if refine: s += str(int(offset))
+    if refine: s += "{}_{}".format((int)(x), (int)(y))
     if prefixName:
         s = "{}{}".format(prefixName, s)
     cmd.create(s, "({},tmp_scaffold, tmp_memb)".format(protein))

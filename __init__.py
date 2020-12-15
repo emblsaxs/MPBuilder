@@ -116,7 +116,7 @@ class mpbuilder():
             self.form.input_filename_prot.setEnabled(True)
             self.form.btn_browse_prot.setEnabled(True)
             self.form.first_angle_label.setEnabled(True)
-            self.form.first_angle_label.setText("Offset along Z-axis (A)")
+            self.form.first_angle_label.setText("Offset along X-axis (A)")
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
@@ -133,11 +133,11 @@ class mpbuilder():
             self.form.input_scaffold_number_min.setEnabled(False)
             self.form.input_scaffold_number_max.setEnabled(False)
             self.form.input_scaffold_number_step.setEnabled(False)
-            self.form.second_angle_label.setEnabled(False)
-            self.form.input_rotAng_step_2.setEnabled(False)
-            self.form.input_rotAng_min_2.setEnabled(False)
-            self.form.input_rotAng_max_2.setEnabled(False)
-            self.form.label_2.setEnabled(False)
+            self.form.second_angle_label.setText("Offset along Y-axis (A)")
+            self.form.second_angle_label.setEnabled(True)
+            self.form.input_rotAng_step_2.setEnabled(True)
+            self.form.input_rotAng_min_2.setEnabled(True)
+            self.form.input_rotAng_max_2.setEnabled(True)
             self.form.input_rotAng.setEnabled(False)
             self.form.checkBox_prebuild_bilayer.setEnabled(True)
             self.form.checkBox_emptyAssembly.setEnabled(True)
@@ -314,14 +314,15 @@ class mpbuilder():
                                                      prefixName)
         elif assemblyType == "nanodisc":
             cmd.reset()
-            z_min  = self.form.input_rotAng_min.value()
-            z_max  = self.form.input_rotAng_max.value() + 1
-            z_step = self.form.input_rotAng_step.value()
+            y_min  = self.form.input_rotAng_min.value()
+            y_max  = self.form.input_rotAng_max.value() + 1
+            y_step = self.form.input_rotAng_step.value()
             if (self.buildMemb):
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementNanodisc(z_min, z_max, z_step, \
+            bestModel, fit = crysolRefinementNanodisc(rot_min_ang, rot_max_ang,rot_step_ang, \
+                                                      y_min, y_max, y_step, \
                                                       self.protName, self.membName, self.scafName, self.dataName,\
                                                       prefixName)
         else:
