@@ -177,7 +177,7 @@ class mpbuilder():
             self.form.input_rotAng_min.setEnabled(False)
             self.form.input_rotAng_max.setEnabled(False)
             self.form.input_rotAng_step.setEnabled(False)
-            self.form.label_7.setText("Lipid Bilaye)")
+            self.form.label_7.setText("Lipid Bilayer")
             self.form.input_copies.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(True)
             self.form.filename_scaffold_label.setText("Detergent")
