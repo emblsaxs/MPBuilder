@@ -96,13 +96,19 @@
       <bool>false</bool>
      </property>
      <property name="styleSheet">
-      <string notr="true">border-image: url(:/icon2Pref/big_mpbuilder_ic2.png) 0 0 0 0 stretch stretch;</string>
+      <string notr="true">image: url(:/icon2Pref/big_mpbuilder_ic2.png);</string>
      </property>
      <property name="text">
       <string notr="true"/>
      </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
+     </property>
+     <property name="pixmap">
+      <pixmap>big_mpbuilder_ic2.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -124,7 +130,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="Build_2">
       <attribute name="title">
