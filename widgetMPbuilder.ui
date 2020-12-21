@@ -130,7 +130,7 @@
       </sizepolicy>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="Build_2">
       <attribute name="title">
@@ -450,7 +450,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string notr="true">Maximum Polar Angle Theta  (deg.)</string>
+          <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Max Polar Angle &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;ω&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; (deg.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -523,7 +523,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string notr="true">Density Angle Phi (deg.)</string>
+          <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Density Angle &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;φ&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; (deg.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
