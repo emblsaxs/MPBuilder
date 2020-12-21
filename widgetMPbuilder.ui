@@ -523,7 +523,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Density Angle &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;φ&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; (deg.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Density Angle &lt;/span&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Δφ&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; (deg.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>

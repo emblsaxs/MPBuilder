@@ -60,7 +60,7 @@ class mpbuilder():
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
             self.form.first_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Max Polar Angle </span><span style=" font-size:10pt; font-weight:600;">ω</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
-            self.form.second_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Max Polar Angle </span><span style=" font-size:10pt; font-weight:600;">ω</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
+            self.form.second_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Density Angle </span><span style=" font-size:10pt; font-weight:600;">Δφ</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
             self.form.label_7.setText("Detergent")
             self.form.btn_browse_scaffold.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(False)
