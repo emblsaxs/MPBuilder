@@ -17,10 +17,10 @@ def predcrysol(modelName, crycalc):
     '''Predicts scattering from the currently active model'''
     with tempdir.TemporaryDirectory() as tmpdir:
         if True == os.path.isfile(modelName + ".pdb"):
-            print(f"Warning: PDB file already exists! Will be rewritten.")
+            print("Warning: PDB file already exists! Will be rewritten.")
         cmd.save(modelName + ".pdb", modelName)
         pdbFullPath = os.path.abspath(modelName + ".pdb")
-        print(f"{modelName} is saved to {pdbFullPath}")
+        print("{} is saved to {}".format(modelName, pdbFullPath))
         if (crycalc == "yes"):
             print("CRYSOL calculation using explicit hydrogens")
             systemCommand(["crysol", "-eh", pdbFullPath])
@@ -91,11 +91,14 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang, \
             for counter2, num in enumerate(numScaffoldCopies):
                 cmd.refresh()
                 modelName = builderSalipro(protName, scafName, membName, prefixName, num, ang, True)
+                if modelName == "bad model": 
+                    print("Bad model parameters: ang: {} num: {}".format(ang, num))
+                    continue
                 cmd.save(modelName + ".pdb", modelName)
                 fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
                 cmd.wizard("message",
-                           f"Refinement: {counter2 + counter1 * (len(numScaffoldCopies))} "
-                           f"out of {len(numScaffoldCopies) * len(angs)} steps. Chi2: {fitResult['chi2']}")
+                           "Refinement: {} ".format(counter2 + counter1 * (len(numScaffoldCopies))) +
+                           " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['chi2']))
                 if float(fitResult['chi2']) < float(res['chi2']):
                     if best != "": cmd.delete(best)
                     res['chi2'] = fitResult['chi2']
@@ -108,8 +111,8 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang, \
         tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     cmd.wizard()
-    print(f"Best model: Number of Scaffolds = {res['number-of-scaffolds']}; Angle = {res['angle']}")
-    print(f"Chi^2 : {res['chi2']} Best model name : {best}")
+    print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
+    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
 
 
@@ -131,11 +134,14 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
             for counter2, densAng in enumerate(dens):
                 cmd.refresh()
                 modelName = builderDetergent(protName, membName, prefixName, ang, densAng, True)
+                if modelName == "bad model": 
+                    print("Bad model parameters: ang: {} densAng: {}".format(ang, densAng))
+                    continue
                 cmd.save(modelName + ".pdb", modelName)
                 fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
                 cmd.wizard("message",
-                           f"Refinement: {counter2 + counter1 * (len(dens))} out of {len(dens) * len(angs)} steps."
-                           f"Chi2: {fitResult['chi2']}")
+                           "Refinement: {} ".format(counter2 + counter1 * (len(dens))) +
+                           " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['chi2']))
                 # if model fits better - store it
                 if float(fitResult['chi2']) < float(res['chi2']):
                     if best != "": cmd.delete(best)
@@ -148,43 +154,49 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
                     cmd.delete(modelName)
         tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
-    print(f"Best model: Lipid Density : {res['lipid density']} Max Polar Angle = {res['max-polar-angle']})")
-    print(f"Chi^2 : {res['chi2']} Best model name : {best}")
+    print("Best model: Lipid Density : {} Max Polar Angle = {})".format(res['lipid density'], res['max-polar-angle']))
+    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
 
     # run crysol in fit mode for nanodisc
-def crysolRefinementNanodisc(z_min, z_max, z_step, \
+def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step, \
                               protName, membName, scafName, dataName, prefixName):
     '''Refine the membrane protein detergent complex against experimental data'''
-    zs = np.arange(z_min, z_max, z_step)
-    res = {"angle": -9999, "number-of-scaffolds": -9999, "chi2": 9999}
+    xs = np.arange(x_min, x_max, x_step)
+    ys = np.arange(y_min, y_max, y_step)
+    res = {"x-offset": -9999, "y-offset": -9999, "chi2": 9999}
     with tempdir.TemporaryDirectory() as tmpdir:
         # copy data file
         tmpdir.copy_in(dataName)
         best = ""
         fitBest = ""
 
-        for counter1, z in enumerate(zs):
-            cmd.refresh()
-            modelName = builderNanodisc(protName, membName, scafName, prefixName, z, True)
-            cmd.save(modelName + ".pdb", modelName)
-            fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
-            cmd.wizard("message",
-                       f"Refinement: {counter1 } out of {len(zs)} steps."
-                       f"Chi2: {fitResult['chi2']}")
-            # if model fits better - store it
-            if float(fitResult['chi2']) < float(res['chi2']):
-                if best != "": cmd.delete(best)
-                res['chi2'] = fitResult['chi2']
-                res['vertical-offset'] = z
-                best = modelName
-                fitBest = fit
-            else:
-                cmd.delete(modelName)
+        for counter1, x in enumerate(xs):
+            for counter2, y in enumerate(ys):
+                cmd.refresh()
+                modelName = builderNanodisc(protName, membName, scafName, prefixName, x, y, True)
+                if modelName == "bad model": 
+                    print("Bad model parameters: " + str(z))
+                    continue
+                cmd.save(modelName + ".pdb", modelName)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
+                cmd.wizard("message",
+                           "Refinement: {} ".format(counter2 + counter1 * (len(ys))) +
+                           " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['chi2']))
+                # if model fits better - store it
+                if float(fitResult['chi2']) < float(res['chi2']):
+                    if best != "": cmd.delete(best)
+                    res['chi2'] = fitResult['chi2']
+                    res['x-offset'] = x
+                    res['y-offset'] = y
+                    best = modelName
+                    fitBest = fit
+                else:
+                    cmd.delete(modelName)
         tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
-    print(f"Best model: Vertical Offset : {res['vertical-offset']}")
-    print(f"Chi^2 : {res['chi2']} Best model name : {best}")
+    print("Best model: Offset coordinates in XY plane : ({},{})".format(res['x-offset'],res['y-offset']))
+    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
 
 def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngle=45, refine = False):
@@ -192,20 +204,22 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     builds and refines MP-salipro systems
     """
     # Checking time of builder function execution
-    print(f'protein is: {protein}')
-    print(f'scaffold is: {scaffold}')
-    print(f'membrane is: {membrane}')
-    print(f'copies of scaffold: {n_sym}')
+    print('protein is: '  + protein)
+    print('scaffold is: ' + scaffold)
+    print('membrane is: ' + membrane)
+    print('copies of scaffold: ' + str(n_sym))
 
-    print(f'rotation angle of scaffold is: {initRotAngle}')
+    print('rotation angle of scaffold is: ' + (str)(initRotAngle))
 
     empty = False
     if protein == None: empty = True
+    print("State of empty/not-empty: {}".format(empty))
+    
     cmd.reset()
     # copies to delete later
     cmd.copy("tmp_scaffold",scaffold) # store initial
     cmd.copy("tmp_memb",membrane) # store initial
-    if not empty:
+    if not empty : 
         cmd.copy("tmp_prot",protein) # store initial
     center("tmp_memb")
     center("tmp_scaffold")
@@ -213,21 +227,22 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     cmd.origin("origin0")
     t_sap = 10  # findMaxDist("tmp_scaffold")/2.0     # approximate half thickness of saposin monomer
 
-    print(f"State of empty/not-empty: {empty}")
+
 
     if not empty:
         avXY  = TMdistCheck("tmp_prot", 0.2)
+        if avXY == -1: return "bad model"
         radXY = avXY / 2.0
         # remove lipids inside pore
-        cmd.remove(f"br. org and tmp_memb within {radXY} of origin0")
+        cmd.remove("tmp_memb within {} of origin0".format(radXY))
         r_lipHead = 4.7  # Area(POPC) = 65 A^2 => radius = sqrt(A/pi); reasonable estimate
         numLipLayers = 2.0  # number of lipid layers between TM of core and Saposin tmp_scaffold
         inRadius = avXY + numLipLayers*r_lipHead + t_sap  # equatorial position of tmp_scaffold center of mass
     else:
         inRadius = 27.0 # equatorial position of tmp_scaffold center of mass
     outRadius = inRadius + t_sap                          # cut-lipids beyond this distance
-    print(f"Inner radius: {inRadius}")
-    print(f"Outer radius: {outRadius}")
+    print("Inner radius: {}".format(inRadius))
+    print("Outer radius: {}".format(outRadius))
 
     n_sym = int(n_sym)
     rotAng = 360. / float(n_sym)
@@ -239,18 +254,18 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     cmd.rotate("x", "90", "tmp_scaffold")
     for i in s0:
         angle =+ i*rotAng
-        cmd.copy(f"seg{i}", "tmp_scaffold")
+        cmd.copy("seg{}".format(i), "tmp_scaffold")
         cmd.origin("origin0")
-        cmd.rotate("y", str(initRotAngle), f"seg{i}")
+        cmd.rotate("y", str(initRotAngle), "seg{}".format(i))
         cmd.origin("origin0")
-        cmd.translate(f"[0,{inRadius},0]", f"seg{i}")
+        cmd.translate("[0,{},0]".format(inRadius), "seg{}".format(i))
         chn = id[i+len(s0)]
-        cmd.alter(f"seg{i}", f"chain = '{chn}'")
+        cmd.alter("seg{}".format(i), "chain = '{}'".format(chn))
         cmd.origin("origin0")
-        cmd.rotate("z", str(angle), f"seg{i}")
+        cmd.rotate("z", str(angle), "seg{}".format(i))
 
     # remove lipids beyond border encase by saposins
-    cmd.remove(f"br. org and tmp_memb beyond {outRadius} of origin0")
+    cmd.remove("br. org and tmp_memb beyond {} of origin0".format(outRadius))
     # remove lipids clashing with tmp_protein core and saposins
     if not empty:
         cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
@@ -259,14 +274,14 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
 
     # Combine into a single PyMol object
     if empty == True:
-        s = f"empty_{membrane}_{scaffold}_{(int)(initRotAngle)}"
+        s = "empty_{}_{}_{}".format(membrane, scaffold, (int)(initRotAngle))
     else:
-        s = f"{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}"
+        s = "{}_{}_{}_{}".format(protein, membrane, scaffold, (int)(initRotAngle))
     if refine:
-        s = f"{protein}_{membrane}_{scaffold}_{(int)(initRotAngle)}_{(int)(n_sym)}"
+        s = "{}_{}_{}_{}_{}".format(protein, membrane, scaffold, (int)(initRotAngle), (int)(n_sym))
     if prefixName:
-        s = f"{prefixName}{s}"
-    cmd.create(s, f"{protein}, tmp_memb, seg*")
+        s = "{}{}".format(prefixName, s)
+    cmd.create(s, protein, tmp_memb, "seg*")
     cmd.save(s + ".pdb", s)
 
     cmd.delete("tmp_memb")
@@ -277,50 +292,53 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
 
     return s
 
-def builderNanodisc(protein, membrane, scaffold, prefixName, offset = 0, refine = False):
+def builderNanodisc(protein, membrane, scaffold, prefixName, x = 0, y = 0,  refine = False):
     """
     builds a MP-nanodisc systems
     scaffold in this case is a double belt of MSP
     """
     # Checking time of builder function execution
-    print(f'protein is: {protein}')
-    print(f'scaffold is: {scaffold}')
-    print(f'membrane is: {membrane}')
+    print('protein is: '  + protein)
+    print('scaffold is: ' + scaffold)
+    print('membrane is: ' + membrane)
     empty = False
     if protein == None: empty = True
+    if not empty:
+        cmd.copy("tmp_prot",protein) # store initial
+        cmd.translate("[{},{},0]".format(x, y), "tmp_prot")
+    print("State of empty/not-empty: {}".format(empty))
     # copies to delete later
     cmd.copy("tmp_scaffold",scaffold) # store initial
     cmd.copy("tmp_memb",membrane) # store initial
-    if not empty:
-        cmd.copy("tmp_prot",protein) # store initial
+    
     center("tmp_memb")
     center("tmp_scaffold")
     cmd.pseudoatom("origin0", pos=[0,0,0])
     cmd.origin("origin0")
     outRadius = findAverDist("tmp_scaffold")
-    cmd.translate(f"[0,0,{offset}]", f"tmp_scaffold")
-    print(f"Max distance from origin to scaffold in xy plane: {outRadius}")
+    print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
-    cmd.remove(f"br. org and tmp_memb beyond {outRadius} of origin0")
-    print(f"State of empty/not-empty: {empty}")
+    cmd.remove("org and tmp_memb beyond {} of origin0".format(outRadius))
+
     # remove lipids clashing with tmp_protein core
     if not empty:
         avXY = TMdistCheck("tmp_prot", 0.2)
+        if avXY == -1: return "bad model"
         minXY = avXY/2.0
         # remove lipids inside pore
-        cmd.remove(f"br. org and tmp_memb within {minXY} of origin0")
-        print(f"Mean distance if TM cross-section in xy plane: {avXY}")
+        cmd.remove("org and tmp_memb within {} of origin0".format(minXY))
+        print("Mean distance if TM cross-section in xy plane: {}".format(avXY))
 
     if empty:
-        cmd.remove("br. org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
-        s = f"empty_{membrane}_{scaffold}"
+        cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
+        s = "empty_{}_{}".format(membrane, scaffold)
     else:
-        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
-        s = f"{protein}_{membrane}_{scaffold}"
-    if refine: s += str(int(offset))
+        cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+        s = "{}_{}_{}".format(protein, membrane, scaffold)
+    if refine: s += "{}_{}".format((int)(x), (int)(y))
     if prefixName:
-        s = f"{prefixName}{s}"
-    cmd.create(s,f"({protein},tmp_scaffold, tmp_memb)")
+        s = "{}{}".format(prefixName, s)
+    cmd.create(s, "({},tmp_scaffold, tmp_memb)".format(protein))
     cmd.save(s + ".pdb", s)
 
     cmd.delete("tmp_memb")
@@ -336,8 +354,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     """
 
     # Checking object names
-    print(f'protein   is: {protein}')
-    print(f'detergent is: {detergent}')
+    print('detergent is: ' + detergent)
     cmd.copy("tmp_deter", detergent) # store initial
     center("tmp_deter")
     #if it is an empty assembly --> build a micelle
@@ -353,20 +370,22 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         s = builderMicelle("tmp_deter", radius, numberOfDetergents)
         cmd.save(s + ".pdb", s)
         return s
-
+        
+    print('protein   is: ' + protein)
     cmd.copy("tmp_prot", protein)  # store initial
     # Determine max distance of TM cross-section (xy plane)
     r        = TMdistCheck("tmp_prot", 2.0)
+    if r == -1: return "bad model"
     detR     = findMaxDist("tmp_deter")
-    print(f"Max distance if TM cross-section is in a xy plane: {r}")
-    print(f"Max distance of detergent : {detR}")
+    print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
+    print("Max distance of detergent : " + (str)(detR))
     
     #Shrink detergent along z axis to match ry
     #stretch = r/detR
     #affineStretch(detergent, stretch)
     # find new
     #detR     = detR * stretch
-    print(f"Max distance of detergent after shrinking: {detR}")
+    print("Max distance of detergent after shrinking: " + (str)(detR))
     # Create a ring of detergents using spherical coordinates
     # TODO: find automatically?
     if refine:
@@ -374,26 +393,26 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         #theta = random.sample(range(-ang, ang), 10)
         #phi = random.sample(range(0, 360), densAng)
         # geometrical
-        theta = np.arange(-ang, ang + 1, 3)
+        theta = np.arange(-ang, ang, 3)
         phi    = np.arange(0, 361, densAng)
     else:
         # stochastic
         #theta = random.sample(range(-20, 20), 10)
         #phi = random.sample(range(0, 361), 100)
         # geometrical
-        theta       = range (-10, 19, 3)
+        theta       = range (-14, 14, 3)
         phi          = range(0, 361, 10)   # find angular step from average density?
     builderCorona(theta, phi, "tmp_deter", r, detR)
 
     # combine components into single PYMOL object
     if refine:
-        s = f"{protein}_{detergent}_{(int)(ang)}_{(int)(densAng)}"
+        s = "{}_{}_{:d}_{:d}".format(protein, detergent, (int)(ang), (int)(densAng))
     else:
-        s = f"{protein}_complex_with_{detergent}"
+        s = "{}_complex_with_{}".format(protein, detergent)
     if prefixName:
-        s = f"{prefixName}{s}"
+        s = "{}{}".format(prefixName, s)
     #affineStretch("corona", 1.1)
-    cmd.create(s, f"({protein}, corona)")
+    cmd.create(s, "({}, corona)".format(protein))
     cmd.delete("corona")
     cmd.delete("tmp_prot")
     cmd.delete("tmp_deter")
@@ -416,14 +435,14 @@ def builderMicelle(detergent, r, numberOfDetergents):
         phi = random.sample(range(0, 360), numberOfDetergents)
     for t, p in zip(theta, phi):
         i += 1
-        cmd.copy(f"seg{i}", detergent)
-        cmd.alter(f"seg{i}", f"resi={i}") # assign residue numbers
+        cmd.copy("seg{}".format(i), detergent)
+        cmd.alter("seg{}".format(i), "resi={}".format(i)) # assign residue numbers
         # randomly sample on a sphere
-        cmd.translate(f"[0,{r},0]", f"seg{i}")
-        cmd.rotate("x", f"{t}", f"seg{i}")
-        cmd.rotate("z", f"{p}", f"seg{i}")
-    s = f"micelle_{detergent}_{(int)(r)}_{(int)(numberOfDetergents)}"
-    cmd.create(f"{s}", "seg*")
+        cmd.translate("[0,{},0]".format(r), "seg{}".format(i))
+        cmd.rotate("x", (str)(t), "seg{}".format(i))
+        cmd.rotate("z", (str)(p), "seg{}".format(i))
+    s = "micelle_{}_{}_{}".format(detergent, (int)(r),(int)(numberOfDetergents))
+    cmd.create(s, "seg*")
     cmd.delete("seg*")
     #center(f"{s}")
     #cmd.show_as("sticks","org")
@@ -440,13 +459,13 @@ def builderCorona(theta, fi, detergent, r, detR):
     for t, a in zip(theta, angleVer):
         for f in fi:
             i += 1
-            cmd.copy(f"seg{i}", detergent)
-            cmd.alter(f"seg{i}", f"resi={i}") # assign residue numbers
+            cmd.copy("seg{}".format(i), detergent)
+            cmd.alter("seg{}".format(i), "resi={}".format(i)) # assign residue numbers
             # corona
-            cmd.rotate("x", f"{a}", f"seg{i}")
-            cmd.translate(f"[0,{r + 0.5*detR*np.cos(np.deg2rad(a))},0]", f"seg{i}")
-            cmd.translate(f"[0,0,{(r+detR)*np.sin(np.deg2rad(t))}]", f"seg{i}")
-            cmd.rotate("z", f"{f}", f"seg{i}")
+            cmd.rotate("x", (str)(a), "seg{}".format(i))
+            cmd.translate("[0,{},0]".format(r + 0.5*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
+            cmd.translate("[0,0,{}]".format((r+detR)*np.sin(np.deg2rad(t))), "seg{}".format(i))
+            cmd.rotate("z", (str)(f), "seg{}".format(i))
     cmd.create("corona", "seg*")
     cmd.delete("seg*")
 
@@ -476,17 +495,17 @@ def builderMembrane(lipid):
 
     for i in s1:
         # first column
-        cmd.copy(f"lip{i}", "start_lipid") # row of lipids
-        cmd.alter(f"lip{i}", f"resi{i}") # change residue numbers
+        cmd.copy("lip{}".format(i), "start_lipid") # row of lipids
+        cmd.alter("lip{}".format(i), "resi{}".format(i)) # change residue numbers
         y = i * step_y
-        cmd.translate(f"[{step_x},{y},{step_z}]", f"lip{i}")
+        cmd.translate("[{},{},{}]".format(step_x, y, step_z), "lip{}".format(i))
         # generate remaining rows/columns in same leaflet
         for j in s0:
             k = int(nlip) * i + j # TODO: general counter to write correct lipid number
-            cmd.copy(f"lip{k}", f"lip{i}") # adjacent row of lipids
-            cmd.alter(f"lip{k}", f"resi={k}") # change residue numbers
+            cmd.copy("lip{}".format(k), "lip{}".format(i)) # adjacent row of lipids
+            cmd.alter("lip{}".format(k), "resi={}".format(k)) # change residue numbers
             x2 = j*step_x2
-            cmd.translate(f"[{x2},{step_y2},{step_z2}]", f"lip{k}")
+            cmd.translate("[{},{},{}]".format(x2, step_y2, step_z2), "lip{}".format(k))
         cmd.sort() # sort atom order
     # create second leaflet
     # simple method by creating a single leaflet object:
@@ -496,11 +515,11 @@ def builderMembrane(lipid):
     cmd.copy("memb","mema")
     cmd.alter("memb", "segi = 'memb'")
     cmd.rotate("x", 180, "memb")
-    cmd.translate(f"[0,0,{(-1.0*(dmax + 0.5))}]" , "memb")
+    cmd.translate("[0,0,{}]".format((-1.0*(dmax + 0.5))) , "memb")
     #cmd.color("yellow", "segi = 'mema'")
     #cmd.color("blue", "segi = 'memb'")
     cmd.translate("[3.5,3.5,0]", "memb") # optional shift of single leaflet to avoid aliphatic clashes
-    s = f"{lipid}_bilayer"
+    s = "{}_bilayer".format(lipid)
     cmd.create(s,"(mema,memb)")
     cmd.delete("mema ,memb, start_lipid")
     center(s)
@@ -514,13 +533,13 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
     builds MP - bicelle complex using a membrane and a single detergent molecule
     """
     # Checking object names
-    print(f'protein   is: {protein}')
-    print(f'membrane  is: {membrane}')
-    print(f'detergent is: {detergent}')
-
+    print('protein   is: ' + protein)
+    print('membrane  is: ' + membrane)
+    print('detergent is: ' + detergent)
     empty = False
-    if protein == None: empty = True
-    # copies to delete later
+    if protein is None: empty = True
+    if not empty: 
+        cmd.copy("tmp_prot", protein)  # store initial
     cmd.copy("tmp_memb", membrane)  # store initial
     cmd.copy("tmp_deter", detergent)  # store initial
     if not empty:
@@ -532,9 +551,10 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
 
     # Determine max distance of TM cross-section (xy plane)
     r = TMdistCheck("tmp_prot", 2.0)
+    if r == -1: return "bad model"
     detR = findMaxDist("tmp_deter")
-    print(f"Max distance if TM cross-section is in a xy plane: {r}")
-    print(f"Max distance of detergent : {detR}")
+    print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
+    print("Max distance of detergent : " + (str)(detR))
 
     ## Shrink detergent along z axis to match ry
     #stretch = r / detR
@@ -549,29 +569,29 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
         # theta = random.sample(range(-ang, ang), 10)
         # phi = random.sample(range(0, 360), densAng)
         # geometrical
-        theta = np.arange(-ang, ang + 1, 5)
-        phi = np.arange(0, 360, densAng)
+        theta = np.arange(-ang, ang, 3)
+        phi = np.arange(0, 361, densAng)
     else:
         # stochastic
         # theta = random.sample(range(-20, 20), 10)
         # phi = random.sample(range(0, 361), 100)
         # geometrical
-        theta = range(-20, 21, 5)
-        phi = range(0, 361, 5)  # find angular step from average density?
+        theta        = range (-14, 14, 3)
+        phi          = range(0, 361, 10)   # find angular step from average density?
 
     builderCorona(theta, phi, "tmp_deter", r, detR)
     affineStretch("corona", 1.1)
     # remove lipids inside pore
-    cmd.remove(f"br. org and tmp_memb within {r/2.0} of origin0")
+    cmd.remove("tmp_memb within {} of origin0".format(r/2.0))
     cmd.origin("origin0")
     # remove lipids beyond border encased by MSP
-    print(f"org and tmp_memb beyond {r} of origin0")
-    cmd.remove(f"org and tmp_memb beyond {r} of origin0")
+    print("org and tmp_memb beyond {} of origin0".format(r))
+    cmd.remove("org and tmp_memb beyond {} of origin0".format(r))
     # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
-    cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
-    s = f"{prefixName}{protein}_{membrane}_{detergent}"
-
-    cmd.create(s,f"({protein}, corona, tmp_memb)")
+    cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+    s = "{}_{}_{}".format(protein, membrane, detergent)
+    if prefixName: s = "{}{}".format(prefixName, s)
+    cmd.create(s,"({}, corona, tmp_memb)".format(protein))
     cmd.save(s + ".pdb", s)
     cmd.delete("tmp_prot, tmp_memb, tmp_deter, corona")
     cmd.delete("origin0")
@@ -587,10 +607,10 @@ def TMdistCheck(selection, z):
     for ang in range (0, 181, 10):
         dlist = []
         cmd.rotate('z', ang, selection)
-        xLine = f"{selection} and z > -{z} and z < {z}  and y > -{z} and y < {z}"
+        xLine = "{} and z > {} and z < {}  and y > {} and y < {}".format(selection, -z, z, -z, z)
         atoms = cmd.index(xLine)
         if len(atoms) == 0 :
-            print(f"No atoms in {xLine}.")
+            print("No atoms in {}.".format(xLine))
             continue
         # find R in only one cross-section
         for at1 in cmd.index("origin0"):
@@ -599,7 +619,8 @@ def TMdistCheck(selection, z):
                 dlist.append(dist)
         dmax.append(max(dlist))
         cmd.rotate('z', -ang, selection)
-    meanXY = np.mean(dmax)
+    if len(dmax) == 0: meanXY = -1
+    else:              meanXY = np.mean(dmax)
     cmd.pseudoatom("origin0", pos=[0,0,0])
     return meanXY
 
@@ -637,7 +658,7 @@ def parseCrysolLog(logFileName):
     # will not parse crysol_summary.txt, but the .log file
     # created for each individual run
 
-    chi2 = -9999;
+    chi2 = 9999;
     Rg = -9999;
     eDens = -9999;
 
@@ -673,7 +694,7 @@ def writePdb(sel, prefix = ""):
             npdbfn = npdbfn.translate(" ")
         except ImportError:
             pass
-    print(f"{sel} is saved to {npdbfn}")
+    print("{} is saved to {}".format(sel, npdbfn))
     cmd.save(npdbfn, sel)
     return npdbfn
 
@@ -689,12 +710,12 @@ def center(selection):
     com = cmd.centerofmass(selection, -1.0)
     shift = np.array2string(np.negative(np.array(com)), separator=', ')
     cmd.translate(shift, selection)
-    print(f'Shifting {selection} to center')
+    print('Shifting {} to center'.format(selection))
 
 def affineStretch(selection, stretch):
     # stretch molecule using affine transformations
     stored.altered = []
-    cmd.iterate_state(1, selector.process(selection), f"stored.altered.append([x,{stretch}*y,z])")
+    cmd.iterate_state(1, selector.process(selection), "stored.altered.append([x,{}*y,z])".format(stretch))
     cmd.alter_state(1, selection, "(x,y,z) = stored.altered.pop(0)")
 
 def sample_spherical(npoints, ndim=3):
@@ -708,9 +729,9 @@ def loadModel(filename, pymolObject):
             cmd.delete(pymolObject)
             cmd.load(filename+".pdb")
         except Exception as e:
-            print(f"For file {filename} and {pymolObject}: {e}")
+            print("For file {} and {}: {}".format(filename, pymolObject, e))
 
-#Not used at the moment!! for the future
+#Not used at the moment!!
 def affine(selection,sh_x=0.1,sh_y=0.1):
     """ 
     Perform distortion from circular geometry on scaffold

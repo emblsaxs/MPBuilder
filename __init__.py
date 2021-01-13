@@ -59,9 +59,9 @@ class mpbuilder():
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
-            self.form.first_angle_label.setText("Polar Angle Theta (deg.)")
-            self.form.second_angle_label.setText("Azimuthal Angle Phi (deg.) (Density)")
-            self.form.label_7.setText("Filename (Detergent)")
+            self.form.first_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Max Polar Angle </span><span style=" font-size:10pt; font-weight:600;">ω</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
+            self.form.second_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Density Angle </span><span style=" font-size:10pt; font-weight:600;">Δφ</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
+            self.form.label_7.setText("Detergent")
             self.form.btn_browse_scaffold.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(False)
             self.form.filename_scaffold_label.setEnabled(False)
@@ -90,13 +90,13 @@ class mpbuilder():
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
             self.form.first_angle_label.setText("Scaffold Rotation Angle (deg.)")
-            self.form.label_7.setText("Filename(Lipid Bilayer)")
+            self.form.label_7.setText("Lipid Bilayer")
             self.form.btn_browse_scaffold.setEnabled(True)
             self.form.input_copies.setEnabled(True)
             self.form.number_scaffold_label.setEnabled(True)
             self.form.filename_scaffold_label.setEnabled(True)
             self.form.copies_scaffold_label.setEnabled(True)
-            self.form.filename_scaffold_label.setText("Filename(Scaffold)")
+            self.form.filename_scaffold_label.setText("Scaffold")
             self.form.input_filename_scaffold.setEnabled(True)
             self.form.btn_browse_scaffold.setEnabled(True)
             self.form.number_scaffold_label.setEnabled(True)
@@ -116,28 +116,28 @@ class mpbuilder():
             self.form.input_filename_prot.setEnabled(True)
             self.form.btn_browse_prot.setEnabled(True)
             self.form.first_angle_label.setEnabled(True)
-            self.form.first_angle_label.setText("Offset along Z-axis (A)")
+            self.form.first_angle_label.setText("Offset along X-axis (A)")
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
-            self.form.label_7.setText("Filename(Lipid Bilayer)")
+            self.form.label_7.setText("Lipid Bilayer")
             self.form.btn_browse_scaffold.setEnabled(True)
             self.form.input_copies.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(False)
             self.form.filename_scaffold_label.setEnabled(True)
             self.form.copies_scaffold_label.setEnabled(False)
-            self.form.filename_scaffold_label.setText("Filename(Scaffold)")
+            self.form.filename_scaffold_label.setText("Scaffold")
             self.form.input_filename_scaffold.setEnabled(True)
             self.form.btn_browse_scaffold.setEnabled(True)
             self.form.number_scaffold_label.setEnabled(False)
             self.form.input_scaffold_number_min.setEnabled(False)
             self.form.input_scaffold_number_max.setEnabled(False)
             self.form.input_scaffold_number_step.setEnabled(False)
-            self.form.second_angle_label.setEnabled(False)
-            self.form.input_rotAng_step_2.setEnabled(False)
-            self.form.input_rotAng_min_2.setEnabled(False)
-            self.form.input_rotAng_max_2.setEnabled(False)
-            self.form.label_2.setEnabled(False)
+            self.form.second_angle_label.setText("Offset along Y-axis (A)")
+            self.form.second_angle_label.setEnabled(True)
+            self.form.input_rotAng_step_2.setEnabled(True)
+            self.form.input_rotAng_min_2.setEnabled(True)
+            self.form.input_rotAng_max_2.setEnabled(True)
             self.form.input_rotAng.setEnabled(False)
             self.form.checkBox_prebuild_bilayer.setEnabled(True)
             self.form.checkBox_emptyAssembly.setEnabled(True)
@@ -177,10 +177,10 @@ class mpbuilder():
             self.form.input_rotAng_min.setEnabled(False)
             self.form.input_rotAng_max.setEnabled(False)
             self.form.input_rotAng_step.setEnabled(False)
-            self.form.label_7.setText("Filename(Lipid Bilayer)")
+            self.form.label_7.setText("Lipid Bilayer")
             self.form.input_copies.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(True)
-            self.form.filename_scaffold_label.setText("Filename(Detergent)")
+            self.form.filename_scaffold_label.setText("Detergent")
             self.form.filename_scaffold_label.setEnabled(True)
             self.form.btn_browse_scaffold.setEnabled(True)
             self.form.copies_scaffold_label.setEnabled(False)
@@ -203,7 +203,7 @@ class mpbuilder():
         # Change active buttons
         # type of protein-membrane assembly
         assemblyType = self.form.input_type.currentText()
-        print(f'Assembly type is changed to: {assemblyType}')
+        print('Assembly type is changed to: {}'.format(assemblyType))
         self.changeForm(assemblyType)
 
     def preOriProt(self):
@@ -211,17 +211,19 @@ class mpbuilder():
         User defined orientation of protein true/false
         '''
         if self.form.checkBox_3.isChecked():
-            print(f"Using pre-oriented membrane protein {self.protName} for model building ...")
+            #print(f"Using pre-oriented membrane protein {self.protName} for model building ...")
+            print("Using pre-oriented membrane protein {} for model building ...".format(self.protName))
         elif self.protName == None:
             print("No protein to pre-align")
         else:
-            print(f"Centering and aligning membrane protein {self.protName} for model building ...")
+            #print(f"Centering and aligning membrane protein {self.protName} for model building ...")
+            print("Centering and aligning membrane protein {} for model building ...".format(self.protName))
             center(self.protName)
 
     def emptyAssembly(self):
         assemblyType = self.form.input_type.currentText()
         if self.form.checkBox_emptyAssembly.isChecked():
-          print(f"No transmembrane protein, empty assembly will be generated ...")
+          print("No transmembrane protein, empty assembly will be generated ...")
           self.form.label_6.setEnabled(False)
           self.form.input_filename_prot.setEnabled(False)
           self.form.btn_browse_prot.setEnabled(False)
@@ -230,7 +232,7 @@ class mpbuilder():
             self.form.first_angle_label.setText("Radius-vector (A)")
             self.form.second_angle_label.setText("Number of detergent molecules")
         else:
-          print(f"Transmembrane protein {self.protName} will be used for for model building ...")
+          print("Transmembrane protein {} will be used for for model building ...".format(self.protName))
           if assemblyType == "detergent":
               self.form.first_angle_label.setText("Maximum Polar Angle Theta  (deg.)")
               self.form.second_angle_label.setText("Density Angle Phi (deg.)")
@@ -240,10 +242,10 @@ class mpbuilder():
         activate the button and store the variable
         '''
         if self.form.checkBox_prebuild_bilayer.isChecked():
-            print(f"Using pre-built membrane {self.membName}")
+            print("Using pre-built membrane {}".format(self.membName))
             self.buildMemb = False
         else:
-            print(f"Using a single molecule to build a membrane")
+            print("Using a single molecule to build a membrane")
             self.buildMemb = True
 
     # CRYSOL predict scattering on single assembly
@@ -257,7 +259,7 @@ class mpbuilder():
                 systemCommand([viewer, df])
                 self.prediction = df
         else:
-            print(f'pdb file is missing. Model Name: {self.modelName}')
+            print("pdb file is missing. Model Name: {}".format(self.modelName))
 
     # CRYSOL fit run on single assembly
     def run_crysol_fit(self):
@@ -266,7 +268,7 @@ class mpbuilder():
             fitcrysol(self.modelName,self.dataName, "yes", True)
         else:
             print('pdb or SAXS data file is missing!')
-            print(f'model file: {self.modelName} data file: {self.dataName}')
+            print('model file: {} data file: {}'.format(self.modelName, self.dataName))
 
     def run_refinement(self):
         """Finds the model that fits SAXS data"""
@@ -278,7 +280,7 @@ class mpbuilder():
             return
         seconds_init = time.time()
         assemblyType = self.form.input_type.currentText()
-        print(f'Assembly is: {assemblyType}')
+        print('Assembly is: {}'.format(assemblyType))
         prefixName = self.form.output_filename_prefix.text()
         # center protein
         self.preOriProt()
@@ -312,25 +314,26 @@ class mpbuilder():
                                                      prefixName)
         elif assemblyType == "nanodisc":
             cmd.reset()
-            z_min  = self.form.input_rotAng_min.value()
-            z_max  = self.form.input_rotAng_max.value() + 1
-            z_step = self.form.input_rotAng_step.value()
+            y_min  = self.form.input_rotAng_min.value()
+            y_max  = self.form.input_rotAng_max.value() + 1
+            y_step = self.form.input_rotAng_step.value()
             if (self.buildMemb):
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementNanodisc(z_min, z_max, z_step, \
+            bestModel, fit = crysolRefinementNanodisc(rot_min_ang, rot_max_ang,rot_step_ang, \
+                                                      y_min, y_max, y_step, \
                                                       self.protName, self.membName, self.scafName, self.dataName,\
                                                       prefixName)
         else:
-            print(f"Refinement is not supported for assembly type {assemblyType}")
+            print("Refinement is not supported for assembly type {}".format(assemblyType))
             return
         self.modelName = bestModel
         self.fit = fit
         seconds_tmp = time.time()
         refresh()
-        t = round((seconds_tmp - seconds_init), 2)
-        print(f"{t} seconds consumed.")
+        t = int((seconds_tmp - seconds_init))
+        print("{:d} seconds consumed.".format(t))
         systemCommand([viewer, self.fit])
 
     def run_build(self):
@@ -339,8 +342,8 @@ class mpbuilder():
         # get form data
         prefixName = self.form.output_filename_prefix.text()
         assemblyType = self.form.input_type.currentText()
-        print(f'Assembly is: {assemblyType}')
-        print(f'Building model...')
+        print('Assembly is: {}'.format(assemblyType))
+        print('Building model...')
         # center protein if needed
         self.preOriProt()
         #delete old model
@@ -353,7 +356,7 @@ class mpbuilder():
             #  execute salipro builder
             rotAng = self.form.input_rotAng.value()
             numScaffoldCopies = self.form.input_copies.value()
-            print(f'Number of scaffold copies: {numScaffoldCopies}')
+            print('Number of scaffold copies: {}'.format(numScaffoldCopies))
             if (self.buildMemb):
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
@@ -384,10 +387,10 @@ class mpbuilder():
             self.modelName = builderBicelle(self.protName, self.membName, self.scafName, prefixName)
 
         refresh()
-        print(f"Model name is {self.modelName}")
+        print("Model name is {}".format(self.modelName))
         seconds_tmp = time.time()
-        t = round((seconds_tmp - seconds_init), 2)
-        print(f"{t} seconds consumed.")
+        t = int((seconds_tmp - seconds_init))
+        print("{:d} seconds consumed.".format(t))
 
     def browse_filename_data(self, _str):
         filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', os.getcwd(), "dat files (*.dat);;")[0]
