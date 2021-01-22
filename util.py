@@ -281,7 +281,8 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
         s = "{}_{}_{}_{}_{}".format(protein, membrane, scaffold, (int)(initRotAngle), (int)(n_sym))
     if prefixName:
         s = "{}{}".format(prefixName, s)
-    cmd.create(s, protein, tmp_memb, "seg*")
+    #cmd.create(s, protein, tmp_memb, "seg*")
+    cmd.create(s, "({},tmp_memb, seg*)".format(protein))
     cmd.save(s + ".pdb", s)
 
     cmd.delete("tmp_memb")
