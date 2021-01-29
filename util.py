@@ -539,17 +539,17 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine = False, ang
     print('detergent is: ' + detergent)
     empty = False
     if protein is None: empty = True
-    if not empty: 
-        cmd.copy("tmp_prot", protein)  # store initial
-    cmd.copy("tmp_memb", membrane)  # store initial
-    cmd.copy("tmp_deter", detergent)  # store initial
     if not empty:
         cmd.copy("tmp_prot", protein)  # store initial
-    # center("tmp_prot")
+    print("State of empty/not-empty: {}".format(empty))
+    # copies to delete later
+    cmd.copy("tmp_memb", membrane)  # store initial
+    cmd.copy("tmp_deter", detergent)  # store initial
+
     center("tmp_memb")
     center("tmp_deter")
     cmd.pseudoatom("origin0", pos=[0, 0, 0])
-
+    cmd.origin("origin0")
     # Determine max distance of TM cross-section (xy plane)
     r = TMdistCheck("tmp_prot", 2.0)
     if r == -1: return "bad model"
