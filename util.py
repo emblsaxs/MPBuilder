@@ -712,12 +712,14 @@ def center(selection):
     shift = np.array2string(np.negative(np.array(com)), separator=', ')
     cmd.translate(shift, selection)
     print('Shifting {} to center'.format(selection))
+cmd.extend("center", center)
 
 def affineStretch(selection, stretch):
     # stretch molecule using affine transformations
     stored.altered = []
     cmd.iterate_state(1, selector.process(selection), "stored.altered.append([x,{}*y,z])".format(stretch))
     cmd.alter_state(1, selection, "(x,y,z) = stored.altered.pop(0)")
+cmd.extend("affineStretch", affineStretch)
 
 def sample_spherical(npoints, ndim=3):
     vec = np.random.randn(ndim, npoints)
