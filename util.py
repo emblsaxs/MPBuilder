@@ -152,8 +152,10 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-        tmpdir.move_out(best + ".pdb")
-        tmpdir.move_out(fitBest)
+        if res['chi2'] < 9999:
+            tmpdir.move_out(best + ".pdb")
+            tmpdir.move_out(fitBest)
+        else: return "Bad parameters", "No fit"
     print("Best model: Lipid Density : {} Max Polar Angle = {})".format(res['lipid density'], res['max-polar-angle']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
@@ -375,10 +377,10 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     print('protein   is: ' + protein)
     cmd.copy("tmp_prot", protein)  # store initial
     # Determine max distance of TM cross-section (xy plane)
-    r        = TMdistCheck("tmp_prot", 2.0)
-    if r == -1: return "bad model"
+    #r        = TMdistCheck("tmp_prot", 2.0)
+    #if r == -1: return "bad model"
     detR     = findMaxDist("tmp_deter")
-    print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
+    #print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
     print("Max distance of detergent : " + (str)(detR))
     
     #Shrink detergent along z axis to match ry
@@ -386,7 +388,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
     #affineStretch(detergent, stretch)
     # find new
     #detR     = detR * stretch
-    print("Max distance of detergent after shrinking: " + (str)(detR))
+    # print("Max distance of detergent after shrinking: " + (str)(detR))
     # Create a ring of detergents using spherical coordinates
     # TODO: find automatically?
     if refine:
@@ -403,7 +405,8 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         # geometrical
         theta       = range (-14, 14, 3)
         phi          = range(0, 361, 10)   # find angular step from average density?
-    builderCorona(theta, phi, "tmp_deter", r, detR)
+    #builderCorona(theta, phi, "tmp_deter", r, detR)
+    builderCorona(theta, phi, "tmp_deter", "tmp_prot", detR)
 
     # combine components into single PYMOL object
     if refine:
@@ -451,17 +454,43 @@ def builderMicelle(detergent, r, numberOfDetergents):
     # affineStretch(s, 10)
     return s
 
-def builderCorona(theta, fi, detergent, r, detR):
+
+def builderCorona(theta, fi, detergent, protein, detR):
     # Build symmates with desired rotations
     refresh()
+    cmd.pseudoatom("origin0", pos=[0, 0, 0])
     thetaSteps = len(theta)
     angleVer = np.linspace(-90, 90, thetaSteps)
     i = 0
+    roffi = []
+    # find surface
+    for f in fi:
+        # find distance to surface
+        # cmd.rotate("y", (str)(-t), protein)
+        cmd.rotate("z", (str)(-f), protein)
+        xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -5, 5, -5, 5)
+        atoms = cmd.index(xLine)
+        dlist = []
+        if len(atoms) == 0:
+            print("No atoms: Theta = {} Phi = {}.".format(t, f))
+            continue
+            # find R in only one cross-section
+        for at1 in cmd.index("origin0"):
+            for at2 in atoms[::10]:
+                dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
+                dlist.append(dist)
+        r = max(dlist)  # * np.cos(np.deg2rad(t))
+        roffi.append(r)
+        # cmd.rotate("y", (str)(t), protein)
+        cmd.rotate("z", (str)(f), protein)
+
     for t, a in zip(theta, angleVer):
-        for f in fi:
+        for n, f in enumerate(fi):
+            r = roffi[n] / np.cos(np.deg2rad(t))
             i += 1
             cmd.copy("seg{}".format(i), detergent)
             cmd.alter("seg{}".format(i), "resi={}".format(i)) # assign residue numbers
+
             # corona
             cmd.rotate("x", (str)(a), "seg{}".format(i))
             cmd.translate("[0,{},0]".format(r + 0.5*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
