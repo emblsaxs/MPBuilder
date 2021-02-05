@@ -415,7 +415,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         s = "{}_complex_with_{}".format(protein, detergent)
     if prefixName:
         s = "{}{}".format(prefixName, s)
-    #affineStretch("corona", 1.1)
+    #affineStretch("corona", 1.01)
     cmd.create(s, "({}, corona)".format(protein))
     cmd.delete("corona")
     cmd.delete("tmp_prot")
@@ -463,39 +463,37 @@ def builderCorona(theta, fi, detergent, protein, detR):
     angleVer = np.linspace(-90, 90, thetaSteps)
     i = 0
     roffi = []
-    # find surface
+    # find surface grid
     for f in fi:
-        # find distance to surface
-        # cmd.rotate("y", (str)(-t), protein)
+        # find distances to surface
         cmd.rotate("z", (str)(-f), protein)
-        xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -5, 5, -5, 5)
+        xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -detR, detR, -5, 5)
         atoms = cmd.index(xLine)
         dlist = []
         if len(atoms) == 0:
-            print("No atoms: Theta = {} Phi = {}.".format(t, f))
+            print("No atoms at azimuthal angle: Phi = {}.".format(f))
             continue
             # find R in only one cross-section
         for at1 in cmd.index("origin0"):
             for at2 in atoms[::10]:
                 dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
                 dlist.append(dist)
-        r = max(dlist)  # * np.cos(np.deg2rad(t))
+        r = max(dlist) # * np.cos(np.deg2rad(t))
         roffi.append(r)
-        # cmd.rotate("y", (str)(t), protein)
         cmd.rotate("z", (str)(f), protein)
-
+    cmd.rotate("z", -90, detergent)
     for t, a in zip(theta, angleVer):
         for n, f in enumerate(fi):
-            r = roffi[n] / np.cos(np.deg2rad(t))
+            r = roffi[n]# / np.cos(np.deg2rad(t))
             i += 1
             cmd.copy("seg{}".format(i), detergent)
             cmd.alter("seg{}".format(i), "resi={}".format(i)) # assign residue numbers
-
             # corona
-            cmd.rotate("x", (str)(a), "seg{}".format(i))
-            cmd.translate("[0,{},0]".format(r + 0.5*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
+            cmd.rotate("y", (str)(-a), "seg{}".format(i))
+            cmd.translate("[{},0,0]".format(r + 0.25*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
             cmd.translate("[0,0,{}]".format((r+detR)*np.sin(np.deg2rad(t))), "seg{}".format(i))
             cmd.rotate("z", (str)(f), "seg{}".format(i))
+
     cmd.create("corona", "seg*")
     cmd.delete("seg*")
 
