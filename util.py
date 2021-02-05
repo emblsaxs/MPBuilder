@@ -155,7 +155,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang, \
         if res['chi2'] < 9999:
             tmpdir.move_out(best + ".pdb")
             tmpdir.move_out(fitBest)
-        else: return "Bad parameters", "No fit"
+        else: return "Bad parameters", "No good fit found!"
     print("Best model: Lipid Density : {} Max Polar Angle = {})".format(res['lipid density'], res['max-polar-angle']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest
@@ -415,7 +415,7 @@ def builderDetergent(protein, detergent, prefixName, ang = None, densAng = None,
         s = "{}_complex_with_{}".format(protein, detergent)
     if prefixName:
         s = "{}{}".format(prefixName, s)
-    #affineStretch("corona", 1.01)
+    #affineStretch("corona", 1.1)
     cmd.create(s, "({}, corona)".format(protein))
     cmd.delete("corona")
     cmd.delete("tmp_prot")
@@ -464,33 +464,53 @@ def builderCorona(theta, fi, detergent, protein, detR):
     i = 0
     roffi = []
     # find surface grid
-    for f in fi:
+    #for f in fi:
         # find distances to surface
-        cmd.rotate("z", (str)(-f), protein)
-        xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -detR, detR, -5, 5)
-        atoms = cmd.index(xLine)
-        dlist = []
-        if len(atoms) == 0:
-            print("No atoms at azimuthal angle: Phi = {}.".format(f))
-            continue
-            # find R in only one cross-section
-        for at1 in cmd.index("origin0"):
-            for at2 in atoms[::10]:
-                dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
-                dlist.append(dist)
-        r = max(dlist) # * np.cos(np.deg2rad(t))
-        roffi.append(r)
-        cmd.rotate("z", (str)(f), protein)
+        # cmd.rotate("z", (str)(-f), protein)
+        # xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -detR, detR, -5, 5)
+        # atoms = cmd.index(xLine)
+        # dlist = []
+        # if len(atoms) == 0:
+        #     print("No atoms at azimuthal angle: Phi = {}.".format(f))
+        #     continue
+        #     # find R in only one cross-section
+        # for at1 in cmd.index("origin0"):
+        #     for at2 in atoms[::10]:
+        #         dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
+        #         dlist.append(dist)
+        # r = max(dlist) # * np.cos(np.deg2rad(t))
+        # roffi.append(r)
+        # cmd.rotate("z", (str)(f), protein)
+    r = 0
     cmd.rotate("z", -90, detergent)
     for t, a in zip(theta, angleVer):
         for n, f in enumerate(fi):
-            r = roffi[n]# / np.cos(np.deg2rad(t))
+            ###################EXPERIMENTAL###################
+            cmd.rotate("z", (str)(-f), protein)
+            cmd.translate("[0,0,{}]".format(r*np.sin(np.deg2rad(t))), protein)
+            xLine = "{} and z > {} and z < {}  and y > {} and y < {} and x > 0".format(protein, -detR, detR, -5, 5)
+            atoms = cmd.index(xLine)
+            dlist = []
+            if len(atoms) == 0:
+                print("No atoms at azimuthal angle: Phi = {}.".format(f))
+                continue
+                # find R in only one cross-section
+            for at1 in cmd.index("origin0"):
+                for at2 in atoms[::20]:
+                    dist = cmd.get_distance(atom1=at1, atom2=at2, state=0)
+                    dlist.append(dist)
+            r = max(dlist)   #* np.cos(np.deg2rad(t))
+            roffi.append(r)
+            cmd.rotate("z", (str)(f), protein)
+            cmd.translate("[0,0,{}]".format(-r*np.sin(np.deg2rad(t))), protein)
+            #####################################
+            #r = roffi[n] / np.cos(np.deg2rad(t))
             i += 1
             cmd.copy("seg{}".format(i), detergent)
             cmd.alter("seg{}".format(i), "resi={}".format(i)) # assign residue numbers
             # corona
             cmd.rotate("y", (str)(-a), "seg{}".format(i))
-            cmd.translate("[{},0,0]".format(r + 0.25*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
+            cmd.translate("[{},0,0]".format(r + 0.6*detR*np.cos(np.deg2rad(a))), "seg{}".format(i))
             cmd.translate("[0,0,{}]".format((r+detR)*np.sin(np.deg2rad(t))), "seg{}".format(i))
             cmd.rotate("z", (str)(f), "seg{}".format(i))
 
