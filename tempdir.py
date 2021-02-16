@@ -3,6 +3,7 @@ import shutil
 import os
 import itertools
 
+
 class TemporaryDirectory:
     """Context Manager for working in a temporary directory"""
 
@@ -75,4 +76,3 @@ class TemporaryDirectory:
                     break
         shutil.move(abs_src, abs_dst)
         return abs_dst
-

@@ -1,9 +1,9 @@
-'''
+"""
 PyMOL simple membrane builder
 
 The plugin is constructed to facilitate SAXS analysis/modeling of membrane protein systems
 (D.Molodenskiy & H.D.T.Mertens 2019-2020 for BioSAXS team)
-'''
+"""
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -20,14 +20,16 @@ from pymol.Qt import QtWidgets
 from pymol.Qt.utils import loadUi
 
 from sys import platform
+
 viewer = 'primus'
 if platform == 'win32' or platform == 'win64':
     viewer = 'primusqt'
 
+
 def __init_plugin__(app=None):
-    '''
+    """
     Add an entry to the PyMOL "Plugin" menu
-    '''
+    """
     from pymol.plugins import addmenuitemqt
     addmenuitemqt('Membrane Builder Plugin', run_plugin_gui)
 
@@ -35,10 +37,11 @@ def __init_plugin__(app=None):
 # global reference to avoid garbage collection of our dialog
 mpb = None
 
+
 def run_plugin_gui():
-    '''
+    """
     Open plugin dialog
-    '''
+    """
     global mpb
 
     if mpb is None:
@@ -47,8 +50,7 @@ def run_plugin_gui():
     mpb.dialog.show()
 
 
-class mpbuilder():
-
+class mpbuilder:
 
     def changeForm(self, assembly):
         if assembly == "detergent":
@@ -59,8 +61,14 @@ class mpbuilder():
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
             self.form.input_rotAng_step.setEnabled(True)
-            self.form.first_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Max Polar Angle </span><span style=" font-size:10pt; font-weight:600;">ω</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
-            self.form.second_angle_label.setText(r'<html><head/><body><p><span style=" font-size:10pt;">Density Angle </span><span style=" font-size:10pt; font-weight:600;">Δφ</span><span style=" font-size:10pt;"> (deg.)</span></p></body></html>')
+            self.form.first_angle_label.setText(
+                r'<html><head/><body><p><span style=" font-size:10pt;">Max Polar Angle </span><span style=" '
+                r'font-size:10pt; font-weight:600;">ω</span><span style=" font-size:10pt;"> ('
+                r'deg.)</span></p></body></html>')
+            self.form.second_angle_label.setText(
+                r'<html><head/><body><p><span style=" font-size:10pt;">Density Angle </span><span style=" '
+                r'font-size:10pt; font-weight:600;">Δφ</span><span style=" font-size:10pt;"> ('
+                r'deg.)</span></p></body></html>')
             self.form.label_7.setText("Detergent")
             self.form.btn_browse_scaffold.setEnabled(False)
             self.form.number_scaffold_label.setEnabled(False)
@@ -207,40 +215,40 @@ class mpbuilder():
         self.changeForm(assemblyType)
 
     def preOriProt(self):
-        '''
+        """
         User defined orientation of protein true/false
-        '''
+        """
         if self.form.checkBox_3.isChecked():
-            #print(f"Using pre-oriented membrane protein {self.protName} for model building ...")
+            # print(f"Using pre-oriented membrane protein {self.protName} for model building ...")
             print("Using pre-oriented membrane protein {} for model building ...".format(self.protName))
-        elif self.protName == None:
+        elif self.protName is None:
             print("No protein to pre-align")
         else:
-            #print(f"Centering and aligning membrane protein {self.protName} for model building ...")
+            # print(f"Centering and aligning membrane protein {self.protName} for model building ...")
             print("Centering and aligning membrane protein {} for model building ...".format(self.protName))
             center(self.protName)
 
     def emptyAssembly(self):
         assemblyType = self.form.input_type.currentText()
         if self.form.checkBox_emptyAssembly.isChecked():
-          print("No transmembrane protein, empty assembly will be generated ...")
-          self.form.label_6.setEnabled(False)
-          self.form.input_filename_prot.setEnabled(False)
-          self.form.btn_browse_prot.setEnabled(False)
-          self.protName = None
-          if assemblyType == "detergent":
-            self.form.first_angle_label.setText("Radius-vector (A)")
-            self.form.second_angle_label.setText("Number of detergent molecules")
+            print("No transmembrane protein, empty assembly will be generated ...")
+            self.form.label_6.setEnabled(False)
+            self.form.input_filename_prot.setEnabled(False)
+            self.form.btn_browse_prot.setEnabled(False)
+            self.protName = None
+            if assemblyType == "detergent":
+                self.form.first_angle_label.setText("Radius-vector (A)")
+                self.form.second_angle_label.setText("Number of detergent molecules")
         else:
-          print("Transmembrane protein {} will be used for for model building ...".format(self.protName))
-          if assemblyType == "detergent":
-              self.form.first_angle_label.setText("Maximum Polar Angle Theta  (deg.)")
-              self.form.second_angle_label.setText("Density Angle Phi (deg.)")
+            print("Transmembrane protein {} will be used for for model building ...".format(self.protName))
+            if assemblyType == "detergent":
+                self.form.first_angle_label.setText("Maximum Polar Angle Theta  (deg.)")
+                self.form.second_angle_label.setText("Density Angle Phi (deg.)")
 
     def preBuildBilayer(self):
-        '''
+        """
         activate the button and store the variable
-        '''
+        """
         if self.form.checkBox_prebuild_bilayer.isChecked():
             print("Using pre-built membrane {}".format(self.membName))
             self.buildMemb = False
@@ -251,8 +259,8 @@ class mpbuilder():
     # CRYSOL predict scattering on single assembly
     def run_crysol_predict(self):
         """Prediction of model scattering"""
-        #def predcrysol(crycalc, models, prefix="tmp", param=" "):
-        if (self.modelName):
+        # def predcrysol(crycalc, models, prefix="tmp", param=" "):
+        if self.modelName:
             df = predcrysol(self.modelName, "yes")
             if os.path.exists(df):
                 print('Theoretical SAXS profile generated')
@@ -265,7 +273,7 @@ class mpbuilder():
     def run_crysol_fit(self):
         """Calculation of model fit"""
         if (self.modelName != "" and self.dataName != ""):
-            fitcrysol(self.modelName,self.dataName, "yes", True)
+            fitcrysol(self.modelName, self.dataName, "yes", True)
         else:
             print('pdb or SAXS data file is missing!')
             print('model file: {} data file: {}'.format(self.modelName, self.dataName))
@@ -275,7 +283,7 @@ class mpbuilder():
         if self.membName == None:
             print("Please provide a PDB file!")
             return
-        if self.dataName == None:
+        if self.dataName is None:
             print("Please provide SAXS dat file!")
             return
         seconds_init = time.time()
@@ -293,37 +301,37 @@ class mpbuilder():
             dens_min_ang = self.form.input_rotAng_min_2.value()
             dens_max_ang = self.form.input_rotAng_max_2.value() + 1
             dens_step_ang = self.form.input_rotAng_step_2.value()
-            bestModel, fit = crysolRefinementDetergent(rot_min_ang, rot_max_ang,rot_step_ang, \
-                                                       dens_min_ang,dens_max_ang,dens_step_ang, \
-                                                       self.protName, self.membName, self.dataName,\
+            bestModel, fit = crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
+                                                       dens_min_ang, dens_max_ang, dens_step_ang,
+                                                       self.protName, self.membName, self.dataName,
                                                        prefixName)
 
 
         elif assemblyType == "salipro":
             cmd.reset()
-            scaffold_min  = self.form.input_scaffold_number_min.value()
-            scaffold_max  = self.form.input_scaffold_number_max.value() + 1
+            scaffold_min = self.form.input_scaffold_number_min.value()
+            scaffold_max = self.form.input_scaffold_number_max.value() + 1
             scaffold_step = self.form.input_scaffold_number_step.value()
-            if (self.buildMemb):
+            if self.buildMemb:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementSalipro(rot_min_ang, rot_max_ang,rot_step_ang, \
-                                                     scaffold_min,scaffold_max,scaffold_step, \
-                                                     self.protName, self.membName, self.scafName,self.dataName,\
+            bestModel, fit = crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
+                                                     scaffold_min, scaffold_max, scaffold_step,
+                                                     self.protName, self.membName, self.scafName, self.dataName,
                                                      prefixName)
         elif assemblyType == "nanodisc":
             cmd.reset()
-            y_min  = self.form.input_rotAng_min.value()
-            y_max  = self.form.input_rotAng_max.value() + 1
+            y_min = self.form.input_rotAng_min.value()
+            y_max = self.form.input_rotAng_max.value() + 1
             y_step = self.form.input_rotAng_step.value()
-            if (self.buildMemb):
+            if self.buildMemb:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementNanodisc(rot_min_ang, rot_max_ang,rot_step_ang, \
-                                                      y_min, y_max, y_step, \
-                                                      self.protName, self.membName, self.scafName, self.dataName,\
+            bestModel, fit = crysolRefinementNanodisc(rot_min_ang, rot_max_ang, rot_step_ang,
+                                                      y_min, y_max, y_step,
+                                                      self.protName, self.membName, self.scafName, self.dataName,
                                                       prefixName)
         else:
             print("Refinement is not supported for assembly type {}".format(assemblyType))
@@ -337,7 +345,7 @@ class mpbuilder():
         systemCommand([viewer, self.fit])
 
     def run_build(self):
-        #callback for the "Build" button
+        # callback for the "Build" button
         seconds_init = time.time()
         # get form data
         prefixName = self.form.output_filename_prefix.text()
@@ -346,7 +354,7 @@ class mpbuilder():
         print('Building model...')
         # center protein if needed
         self.preOriProt()
-        #delete old model
+        # delete old model
         cmd.delete(self.modelName)
         # executions depends on the assembly type
         if assemblyType == "detergent":
@@ -357,16 +365,16 @@ class mpbuilder():
             rotAng = self.form.input_rotAng.value()
             numScaffoldCopies = self.form.input_copies.value()
             print('Number of scaffold copies: {}'.format(numScaffoldCopies))
-            if (self.buildMemb):
+            if self.buildMemb:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             self.modelName = builderSalipro(self.protName, self.scafName, self.membName, prefixName,
-                                              numScaffoldCopies, rotAng)
+                                            numScaffoldCopies, rotAng)
 
         elif assemblyType == "nanodisc":
             # execute nanodisc builder
             # build bilayer if check box is activated
-            if (self.buildMemb):
+            if self.buildMemb:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             #  execute builder
@@ -380,7 +388,7 @@ class mpbuilder():
         elif assemblyType == "bicelle":
             # execute bicelle builder
             # build bilayer if check box is activated
-            if (self.buildMemb):
+            if self.buildMemb:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             #  execute builder
@@ -422,7 +430,7 @@ class mpbuilder():
     def browse_filename_scaffold(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open scaffold file', os.getcwd(),
                                                          "PDB files (*.pdb *.cif *.ent);;")[0]
-        filename = filename[:-4] #remove .pdb
+        filename = filename[:-4]  # remove .pdb
         loadModel(filename, self.scafName)
         f = os.path.basename(filename)
         self.form.input_filename_scaffold.setText(f)
@@ -440,23 +448,23 @@ class mpbuilder():
         self.changeForm("detergent")
         self.protName = self.membName = self.scafName = self.dataName = None
         # name of the model
-        self.modelName    = ""
+        self.modelName = ""
         # prefix
         self.prefixName = ""
         # crysol int prediction
         self.prediction = ""
-        #crysol fit
-        self.fit        = ""
-        #result of the fit
+        # crysol fit
+        self.fit = ""
+        # result of the fit
         self.fitResult = {'chi2': -9999, 'Rg': -9999, 'eDens': -9999}
-        #whether to build a membrane or use prebuilt one
+        # whether to build a membrane or use prebuilt one
         self.buildMemb = False
         # hook up button callbacks
         self.form.button_build.clicked.connect(self.run_build)
         self.form.button_refinement.clicked.connect(self.run_refinement)
         self.form.button_crysol_fit.clicked.connect(self.run_crysol_fit)  # single fit of assembly to data
         self.form.button_crysol_predict.clicked.connect(self.run_crysol_predict)  # predict theory
-        #self.form.button_crysol_predict.clicked.connect(lambda: self.run_crysol_predict(modelName))
+        # self.form.button_crysol_predict.clicked.connect(lambda: self.run_crysol_predict(modelName))
 
         self.form.btn_browse_prot.clicked.connect(self.browse_filename_prot)
         self.form.btn_browse_lip.clicked.connect(self.browse_filename_lip)
@@ -464,7 +472,7 @@ class mpbuilder():
         self.form.btn_browse_data.clicked.connect(self.browse_filename_data)
 
         self.form.button_close.clicked.connect(self.dialog.close)
-        
+
         # change GUI depending upon the choice of assembly type
         self.form.input_type.currentIndexChanged.connect(self.change_assembly)
         # emptyAssembly = assemble complex without transmembrane protein component
