@@ -379,7 +379,7 @@ def builderDetergent(protein, detergent, prefixName, ang=None, densAng=None, ref
         else:
             radius = findMaxDist("tmp_deter")
             numberOfDetergents = 300
-        s = builderMicelle("tmp_deter", radius, numberOfDetergents)
+        s = builderMicelle("tmp_deter", 2*radius, numberOfDetergents)
         cmd.save(s + ".pdb", s)
         return s
 
@@ -433,28 +433,59 @@ def builderDetergent(protein, detergent, prefixName, ang=None, densAng=None, ref
     cmd.save(s + ".pdb", s)
     return s
 
+def fibonacci_sphere(samples):
+    points = []
+    phi = np.pi * (3. - np.sqrt(5.))  # golden angle in radians
+
+    for i in range(samples):
+        y = 1 - (i / float(samples - 1)) * 2  # y goes from 1 to -1
+        radius = np.sqrt(1 - y * y)  # radius at y
+
+        theta = phi * i  # golden angle increment
+
+        x = np.cos(theta) * radius
+        z = np.sin(theta) * radius
+
+        points.append([x, y, z])
+
+    return points
+
 
 def builderMicelle(detergent, r, numberOfDetergents):
     refresh()
     i = 0
     numberOfDetergents = int(numberOfDetergents)
     # FIXME: if number of detergents > 360, molecules may clash in space
-    if numberOfDetergents > 360:
-        x1 = range(-180, 180)
-        x2 = range(0, 360)
-        theta = ([random.choice(x1) for _ in range(numberOfDetergents)])
-        phi = ([random.choice(x2) for _ in range(numberOfDetergents)])
-    else:
-        theta = random.sample(range(-180, 180), numberOfDetergents)
-        phi = random.sample(range(0, 360), numberOfDetergents)
-    for t, p in zip(theta, phi):
+    points = fibonacci_sphere(numberOfDetergents)
+    for x,y,z in points:
         i += 1
+        t = np.degrees(np.arccos(z))
+        p = np.degrees(np.arctan(y/x))
         cmd.copy("seg{}".format(i), detergent)
         cmd.alter("seg{}".format(i), "resi={}".format(i))  # assign residue numbers
-        # randomly sample on a sphere
+        # put to to knot of fibonacci grid
+        center("seg{}".format(i))
         cmd.translate("[0,{},0]".format(r), "seg{}".format(i))
-        cmd.rotate("x", str(t), "seg{}".format(i))
-        cmd.rotate("z", str(p), "seg{}".format(i))
+        if x < 0: cmd.rotate("z", 180, "seg{}".format(i))
+        cmd.rotate("z", str(t), "seg{}".format(i))
+        cmd.rotate("y", str(p), "seg{}".format(i))
+        #cmd.translate("[{},{},{}]".format(r * x, r * y, r * z), "seg{}".format(i))
+    # if numberOfDetergents > 360:
+    #     x1 = range(-180, 180)
+    #     x2 = range(0, 360)
+    #     theta = ([random.choice(x1) for _ in range(numberOfDetergents)])
+    #     phi = ([random.choice(x2) for _ in range(numberOfDetergents)])
+    # else:
+    #     theta = random.sample(range(-180, 180), numberOfDetergents)
+    #     phi = random.sample(range(0, 360), numberOfDetergents)
+    # for t, p in zip(theta, phi):
+    #     i += 1
+    #     cmd.copy("seg{}".format(i), detergent)
+    #     cmd.alter("seg{}".format(i), "resi={}".format(i))  # assign residue numbers
+    #     # randomly sample on a sphere
+    #     cmd.translate("[0,{},0]".format(r), "seg{}".format(i))
+    #     cmd.rotate("x", str(t), "seg{}".format(i))
+    #     cmd.rotate("z", str(p), "seg{}".format(i))
     s = "micelle_{}_{}_{}".format(detergent, int(r), int(numberOfDetergents))
     cmd.create(s, "seg*")
     cmd.delete("seg*")
