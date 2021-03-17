@@ -244,7 +244,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
         if avXY == -1: return "bad model"
         radXY = avXY / 2.0
         # remove lipids inside pore
-        cmd.remove("tmp_memb within {} of origin0".format(radXY))
+        cmd.remove("br. tmp_memb within {} of origin0".format(radXY))
         r_lipHead = 4.7  # Area(POPC) = 65 A^2 => radius = sqrt(A/pi); reasonable estimate
         numLipLayers = 2.0  # number of lipid layers between TM of core and Saposin tmp_scaffold
         inRadius = avXY + numLipLayers * r_lipHead + t_sap  # equatorial position of tmp_scaffold center of mass
@@ -330,7 +330,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, x=0, y=0, refine=Fa
     outRadius = findAverDist("tmp_scaffold")
     print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
-    cmd.remove("org and tmp_memb beyond {} of origin0".format(outRadius))
+    cmd.remove("br. org and tmp_memb beyond {} of origin0".format(outRadius))
 
     # remove lipids clashing with tmp_protein core
     if not empty:
@@ -338,14 +338,14 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, x=0, y=0, refine=Fa
         if avXY == -1: return "bad model"
         minXY = avXY / 2.0
         # remove lipids inside pore
-        cmd.remove("org and tmp_memb within {} of origin0".format(minXY))
+        cmd.remove("br. org and tmp_memb within {} of origin0".format(minXY))
         print("Mean distance if TM cross-section in xy plane: {}".format(avXY))
 
     if empty:
-        cmd.remove("org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
+        cmd.remove("br. org and tmp_memb within 0.4 of tmp_scaffold and not hydro")
         s = "empty_{}_{}".format(membrane, scaffold)
     else:
-        cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
         s = "{}_{}_{}".format(protein, membrane, scaffold)
     if refine: s += "{}_{}".format(int(x), int(y))
     if prefixName:
@@ -674,13 +674,13 @@ def builderBicelle(protein, membrane, detergent, prefixName, refine=False, ang=N
     builderCorona(theta, phi, "tmp_deter", r, detR)
     affineStretch("corona", 1.1)
     # remove lipids inside pore
-    cmd.remove("tmp_memb within {} of origin0".format(r / 2.0))
+    cmd.remove("br. tmp_memb within {} of origin0".format(r / 2.0))
     cmd.origin("origin0")
     # remove lipids beyond border encased by MSP
     print("org and tmp_memb beyond {} of origin0".format(r))
-    cmd.remove("org and tmp_memb beyond {} of origin0".format(r))
+    cmd.remove("br. org and tmp_memb beyond {} of origin0".format(r))
     # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
-    cmd.remove("org and tmp_memb within 0.3 of pol. and not hydro")
+    cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
     s = "{}_{}_{}".format(protein, membrane, detergent)
     if prefixName: s = "{}{}".format(prefixName, s)
     cmd.create(s, "({}, corona, tmp_memb)".format(protein))
