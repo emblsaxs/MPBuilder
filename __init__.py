@@ -53,10 +53,11 @@ def run_plugin_gui():
 class mpbuilder:
 
     def changeForm(self, assembly):
+        isProtein = not self.form.checkBox_emptyAssembly.isChecked()
         if assembly == "detergent":
-            self.form.label_6.setEnabled(True)
-            self.form.input_filename_prot.setEnabled(True)
-            self.form.btn_browse_prot.setEnabled(True)
+            self.form.label_6.setEnabled(isProtein)
+            self.form.input_filename_prot.setEnabled(isProtein)
+            self.form.btn_browse_prot.setEnabled(isProtein)
             self.form.first_angle_label.setEnabled(True)
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
@@ -90,9 +91,9 @@ class mpbuilder:
             self.form.checkBox_prebuild_bilayer.setEnabled(False)
             self.form.checkBox_emptyAssembly.setEnabled(True)
         elif assembly == "salipro":
-            self.form.label_6.setEnabled(True)
-            self.form.input_filename_prot.setEnabled(True)
-            self.form.btn_browse_prot.setEnabled(True)
+            self.form.label_6.setEnabled(isProtein)
+            self.form.input_filename_prot.setEnabled(isProtein)
+            self.form.btn_browse_prot.setEnabled(isProtein)
             self.form.first_angle_label.setEnabled(True)
             self.form.input_rotAng_min.setEnabled(True)
             self.form.input_rotAng_max.setEnabled(True)
@@ -120,9 +121,9 @@ class mpbuilder:
             self.form.checkBox_prebuild_bilayer.setEnabled(True)
             self.form.checkBox_emptyAssembly.setEnabled(True)
         elif assembly == "nanodisc":
-            self.form.label_6.setEnabled(True)
-            self.form.input_filename_prot.setEnabled(True)
-            self.form.btn_browse_prot.setEnabled(True)
+            self.form.label_6.setEnabled(isProtein)
+            self.form.input_filename_prot.setEnabled(isProtein)
+            self.form.btn_browse_prot.setEnabled(isProtein)
             self.form.first_angle_label.setEnabled(True)
             self.form.first_angle_label.setText("Offset along X-axis (A)")
             self.form.input_rotAng_min.setEnabled(True)
@@ -178,9 +179,9 @@ class mpbuilder:
             self.form.checkBox_prebuild_bilayer.setEnabled(False)
             self.form.checkBox_emptyAssembly.setEnabled(False)
         elif assembly == "bicelle":
-            self.form.label_6.setEnabled(True)
-            self.form.input_filename_prot.setEnabled(True)
-            self.form.btn_browse_prot.setEnabled(True)
+            self.form.label_6.setEnabled(isProtein)
+            self.form.input_filename_prot.setEnabled(isProtein)
+            self.form.btn_browse_prot.setEnabled(isProtein)
             self.form.first_angle_label.setEnabled(False)
             self.form.input_rotAng_min.setEnabled(False)
             self.form.input_rotAng_max.setEnabled(False)
@@ -205,7 +206,7 @@ class mpbuilder:
             self.form.label_2.setEnabled(False)
             self.form.input_rotAng.setEnabled(False)
             self.form.checkBox_prebuild_bilayer.setEnabled(True)
-            self.form.checkBox_emptyAssembly.setEnabled(False)
+            self.form.checkBox_emptyAssembly.setEnabled(True)
 
     def change_assembly(self):
         # Change active buttons
@@ -232,15 +233,14 @@ class mpbuilder:
         assemblyType = self.form.input_type.currentText()
         if self.form.checkBox_emptyAssembly.isChecked():
             print("No transmembrane protein, empty assembly will be generated ...")
-            self.form.label_6.setEnabled(False)
-            self.form.input_filename_prot.setEnabled(False)
-            self.form.btn_browse_prot.setEnabled(False)
+            self.changeForm(assemblyType)
             self.protName = None
             if assemblyType == "detergent":
                 self.form.first_angle_label.setText("Radius-vector (A)")
                 self.form.second_angle_label.setText("Number of detergent molecules")
         else:
             print("Transmembrane protein {} will be used for for model building ...".format(self.protName))
+            self.changeForm(assemblyType)
             if assemblyType == "detergent":
                 self.form.first_angle_label.setText("Maximum Polar Angle Theta  (deg.)")
                 self.form.second_angle_label.setText("Density Angle Phi (deg.)")

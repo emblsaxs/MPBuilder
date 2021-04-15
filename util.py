@@ -6,7 +6,6 @@ import subprocess
 import numpy as np
 from . import tempdir
 import os
-import random
 from sys import platform
 
 viewer = 'primus'
