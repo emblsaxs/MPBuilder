@@ -298,8 +298,8 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     # remove lipids clashing with tmp_protein core and saposins
     if not empty:
             # DEBUG (27-05-2021): CLashes not being removed properly
-            #        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
-            cmd.remove("br. org and tmp_memb within 0.3 of pol.")
+            cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
+            #cmd.remove("br. org and tmp_memb within 0.3 of pol.")
     else:
         cmd.remove("br. org and tmp_memb within 0.3 of seg* and not hydro")
 
