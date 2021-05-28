@@ -245,9 +245,15 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
         radXY = avXY / 2.0
         # remove lipids inside pore
         cmd.remove("br. tmp_memb within {} of origin0".format(radXY))
-        r_lipHead = 4.7  # Area(POPC) = 65 A^2 => radius = sqrt(A/pi); reasonable estimate
-        numLipLayers = 2.0  # number of lipid layers between TM of core and Saposin tmp_scaffold
-        inRadius = avXY + numLipLayers * r_lipHead + t_sap  # equatorial position of tmp_scaffold center of mass
+        r_liphead = 4.7  # Area(POPC) = 65 A^2 => radius = sqrt(A/pi); reasonable estimate
+        # -----------------------------------------------------------------------------------------
+        # DEBUG (28-04-21): inner radius need the diameter of a lipid head, not the radius (as previous)
+        # -----------------------------------------------------------------------------------------
+        d_liphead = 2.0 * r_liphead
+        numLipLayers = 2  # number of lipid layers between TM of core and Saposin tmp_scaffold
+        #inRadius = avXY + numLipLayers * r_lipHead + t_sap  # equatorial position of tmp_scaffold center of mass
+        #inRadius = avXY + numLipLayers * d_liphead + t_sap  # equatorial position of tmp_scaffold center of mass
+        inRadius = avXY + numLipLayers * d_liphead # equatorial position of tmp_scaffold center of mass
     else:
         inRadius = 27.0  # equatorial position of tmp_scaffold center of mass
     outRadius = inRadius + t_sap  # cut-lipids beyond this distance
@@ -261,24 +267,39 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     id = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     s0 = range(0, n_sym, 1)
     # Build symmates with desired rotations
+    # -----------------------------------------------------------------------------------------
+    # DEBUG (29-04-21): Add a small random perturbation to placement of symmetry mates.
+    # -----------------------------------------------------------------------------------------
+    #
+    # generate some random integers in a range from -5 to 6 (not including 6)
+    r_num = np.random.randint(-5,6)
     cmd.rotate("x", "90", "tmp_scaffold")
+    # And also add an offset to help remove clashes between the scaffold and the MP
+    offset_z = 0.0
     for i in s0:
         angle = + i * rotAng
         cmd.copy("seg{}".format(i), "tmp_scaffold")
         cmd.origin("origin0")
-        cmd.rotate("y", str(initRotAngle), "seg{}".format(i))
+    #    cmd.rotate("y", str(initRotAngle), "seg{}".format(i))
+        cmd.rotate("y", str(initRotAngle+r_num), "seg{}".format(i))
         cmd.origin("origin0")
         cmd.translate("[0,{},0]".format(inRadius), "seg{}".format(i))
         chn = id[i + len(s0)]
         cmd.alter("seg{}".format(i), "chain = '{}'".format(chn))
         cmd.origin("origin0")
-        cmd.rotate("z", str(angle), "seg{}".format(i))
+#        cmd.rotate("z", str(angle), "seg{}".format(i))
+        cmd.rotate("z", str(angle+offset_z), "seg{}".format(i))
 
     # remove lipids beyond border encase by saposins
+    # -----------------------------------------------------------------------------------------
+    # DEBUG (28-04-21): Some problem now with non-removal of clashing lipids....
+    # -----------------------------------------------------------------------------------------
     cmd.remove("br. org and tmp_memb beyond {} of origin0".format(outRadius))
     # remove lipids clashing with tmp_protein core and saposins
     if not empty:
-        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
+            # DEBUG (27-05-2021): CLashes not being removed properly
+            #        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
+            cmd.remove("br. org and tmp_memb within 0.3 of pol.")
     else:
         cmd.remove("br. org and tmp_memb within 0.3 of seg* and not hydro")
 
@@ -302,7 +323,6 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     cmd.delete("origin0")
 
     return s
-
 
 def builderNanodisc(protein, membrane, scaffold, prefixName, x=0, y=0, refine=False):
     """
@@ -390,6 +410,8 @@ def builderDetergent(protein, detergent, prefixName, ang=None, densAng=None, ref
     # r        = TMdistCheck("tmp_prot", 2.0)
     # if r == -1: return "bad model"
     detR = findMaxDist("tmp_deter")
+    ### TEST
+    detR = detR/2.
     # print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
     print("Max distance of detergent : " + str(detR))
 
@@ -558,8 +580,78 @@ def builderCorona(theta, fi, detergent, protein, detR):
             cmd.rotate("z", str(f), "seg{}".format(i))
             # print(f"seg{i} phi = {f} theta = {t} Distance: {r}") #DEBUG
 
+            ########################################################################################
+            #                      CLASH CHECK (DEBUG) - HM March 2021
+            ########################################################################################
+            clashCheckMove("seg{}".format(i), f, 1.0, 1.0)
+            ########################################################################################
+            #clash = cmd.select("seg{} within 1.0 of pol.".format(i))
+            #print(f"clash betwen seg{i} and protein found: {clash}")
+#
+#            totalShift = 0
+#            while clash > 0:
+#                shift = 1.0
+#                cmd.rotate("z", (str)(-f), "seg{}".format(i))
+#                cmd.translate("[{},0,0]".format(shift), "seg{}".format(i))
+#                cmd.rotate("z", (str)(f), "seg{}".format(i))
+#                clash = cmd.select("seg{} within 1.0 of pol.".format(i))
+#                totalShift += shift
+#                print(f"total shift: {totalShift}")
+#                posXYZ = cmd.get_coords("seg{} and name C12".format(i), 1)
+#                print(f"XYZ position of seg{i} C12 : {posXYZ}")
+#                print(f"clash betwen seg{i} and protein: {clash}")
+#            else:
+#                print(f"No clash betwen seg{i} and protein found ...")
+#            xshift = r + 0.6*detR*np.cos(np.deg2rad(a))
+#            zshift = (r+detR)*np.sin(np.deg2rad(t))
+#            print(f"seg{i} phi = {f} theta = {t} a = {a} Distance: {r} xshift = {xshift} zshift = {zshift}") #DEBUG
+#            ########################################################################################
+
     cmd.create("corona", "seg*")
     cmd.delete("seg*")
+
+def clashCheckMove(detergent, rotation, cutoff, shift):
+    """
+    1. checking for clash between detergent and protein during corona building
+    2. if clash shift along Y until no clash detected
+    """
+    clash1 = cmd.select("{} within {} of pol.".format(detergent, cutoff))
+    clash2 = cmd.select("{} within {} of pol.".format(detergent, cutoff/2.0))
+    clash3 = cmd.select("{} within {} of pol.".format(detergent, cutoff/4.0))
+
+
+    if clash3 > 0 and clash2 == 0:
+        clash = clash3
+        shift = shift + cutoff/4.0
+    elif clash2 > 0 and clash1 == 0:
+        clash = clash2
+        shift = shift + cutoff/2.0
+    elif clash1 > 0:
+        clash = clash1
+        shift = shift + cutoff
+    else:
+        clash = 0
+
+    totalShift = 0
+    while clash > 0:
+        shift = shift # DEBUG, can remove this line when things work!
+        print("rotation is: {}".format(-rotation))
+        cmd.rotate("z", "{}".format(-rotation), "{}".format(detergent)) # note rotation negative here!
+        cmd.translate("[{},0,0]".format(shift), "{}".format(detergent))
+        cmd.rotate("z", "{}".format(rotation), "{}".format(detergent)) # note rotation positive here!
+        clash = cmd.select("{} within {} of pol.".format(detergent, cutoff))
+        totalShift += shift
+        print("total shift: {}".format(totalShift))
+        #DEBUG:
+        #posXYZ = cmd.get_coords("seg{} and name C12".format(i), 1)
+        #print(f"XYZ position of seg{i} C12 : {posXYZ}")
+        print("clash between {} and protein: {}".format(detergent,clash))
+    else:
+        print("No clash betwen {} and protein found ...".format(detergent))
+    #DEBUG:
+    #xshift = r + 0.6*detR*np.cos(np.deg2rad(a))
+    #zshift = (r+detR)*np.sin(np.deg2rad(t))
+    #print(f"{detergent} phi = {f} theta = {t} a = {a} Distance: {r} xshift = {xshift} zshift = {zshift}") #DEBUG
 
 
 def builderMembrane(lipid):
@@ -717,6 +809,7 @@ def TMdistCheck(selection, z):
         meanXY = -1
     else:
         meanXY = np.mean(dmax)
+
     cmd.pseudoatom("origin0", pos=[0, 0, 0])
     return meanXY
 
