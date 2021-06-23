@@ -215,7 +215,8 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     builds and refines MP-salipro systems
     """
     # Checking time of builder function execution
-    print('protein is: ' + protein)
+    if protein != None:
+        print('protein is: ' + protein)
     print('scaffold is: ' + scaffold)
     print('membrane is: ' + membrane)
     print('copies of scaffold: ' + str(n_sym))
@@ -309,7 +310,8 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, x=0, y=0, refine=Fa
     scaffold in this case is a double belt of MSP
     """
     # Checking time of builder function execution
-    print('protein is: ' + protein)
+    if protein != None:
+        print('protein is: ' + protein)
     print('scaffold is: ' + scaffold)
     print('membrane is: ' + membrane)
     empty = False
