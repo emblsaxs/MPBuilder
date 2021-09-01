@@ -41,6 +41,9 @@ def predcrysol(modelName, crycalc):
 
 
 def fitcrysol(modelName, dataName, crycalc, showFit):
+    if dataName is None:
+        print("Please set the SAXS .dat file to fit")
+        return False
     if not os.path.isfile(dataName):
         print("SAXS .dat file \'" + dataName + "\' not found")
         return False

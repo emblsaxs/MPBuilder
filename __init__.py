@@ -401,14 +401,14 @@ class mpbuilder:
         print("{:d} seconds consumed.".format(t))
 
     def browse_filename_data(self, _str):
-        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', os.getcwd(), "dat files (*.dat);;")[0]
+        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open file', '', "dat files (*.dat);;")[0]
         if filename:
             f = os.path.relpath(filename)
             self.form.input_filename_data.setText(f)
             self.dataName = f
 
     def browse_filename_prot(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open protein file', os.getcwd(),
+        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open protein file', '',
                                                          "PDB files (*.pdb *.cif *.ent);;")[0]
         filename = filename[:-4]  # remove .pdb
         loadModel(filename, self.protName)
@@ -418,7 +418,7 @@ class mpbuilder:
         refresh()
 
     def browse_filename_lip(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open lipid/detergent file', os.getcwd(),
+        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open lipid/detergent file', '',
                                                          "PDB files (*.pdb *.cif *.ent);;")[0]
         filename = filename[:-4]  # remove .pdb
         loadModel(filename, self.membName)
@@ -428,7 +428,7 @@ class mpbuilder:
         refresh()
 
     def browse_filename_scaffold(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open scaffold file', os.getcwd(),
+        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Open scaffold file', '',
                                                          "PDB files (*.pdb *.cif *.ent);;")[0]
         filename = filename[:-4]  # remove .pdb
         loadModel(filename, self.scafName)
