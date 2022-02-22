@@ -592,7 +592,7 @@ def builderMembrane(lipid):
     for i in s1:
         # first column
         cmd.copy("lip{}".format(i), "start_lipid")  # row of lipids
-        cmd.alter("lip{}".format(i), "resi{}".format(i))  # change residue numbers
+        cmd.alter("lip{}".format(i), "resi={}".format(i))  # change residue numbers
         y = i * step_y
         cmd.translate("[{},{},{}]".format(step_x, y, step_z), "lip{}".format(i))
         # generate remaining rows/columns in same leaflet
