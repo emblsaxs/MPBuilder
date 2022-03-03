@@ -281,7 +281,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, n_sym=9, initRotAngl
     cmd.remove("br. org and tmp_memb beyond {} of origin0".format(outRadius))
     # remove lipids clashing with tmp_protein core and saposins
     if not empty:
-        cmd.remove("br. org and tmp_memb within 0.3 of pol. and not hydro")
+        cmd.remove("br. org and tmp_memb within 0.35 of pol. and not hydro")
     else:
         cmd.remove("br. org and tmp_memb within 0.3 of seg* and not hydro")
 
@@ -372,6 +372,9 @@ def builderDetergent(protein, detergent, prefixName, ang=None, densAng=None, ref
     # Checking object names
     print('detergent is: ' + detergent)
     cmd.copy("tmp_deter", detergent)  # store initial
+    # molecules initially aligned along Z-axis on import, need to rotate into XY plane for protocol: 
+    print("Rotating initial {} aligned along Z ==> into XY plane...".format(detergent))
+    cmd.rotate("x", -90, "tmp_deter")
     center("tmp_deter")
     # if it is an empty assembly --> build a micelle
     if protein is None:
@@ -461,6 +464,7 @@ def builderMicelle(detergent, r, numberOfDetergents):
     numberOfDetergents = int(numberOfDetergents)
     # FIXME: if number of detergents > 360, molecules may clash in space
     points = fibonacci_sphere(numberOfDetergents)
+    print("Rotating detergent molecule for build protocol...")
     for x,y,z in points:
         i += 1
         t = np.degrees(np.arccos(z))
@@ -573,7 +577,7 @@ def builderMembrane(lipid):
     cmd.load(lipid + ".pdb", "start_lipid")
     cmd.alter("start_lipid", "chain = 'X'")
     cmd.alter("start_lipid", "segi = 'mema'")
-    cmd.rotate('x', 90, "start_lipid")
+#    cmd.rotate('x', 90, "start_lipid")
     dmax = findMaxDist("start_lipid")
 
     # create lipid copies and translate them to new position
