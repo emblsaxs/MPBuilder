@@ -2,7 +2,7 @@
 PyMOL simple membrane builder
 
 The plugin is constructed to facilitate SAXS analysis/modeling of membrane protein systems
-(D.Molodenskiy & H.D.T.Mertens 2019-2020 for BioSAXS team)
+(D.Molodenskiy & H.D.T.Mertens 2019-2022 for BioSAXS team)
 """
 
 from __future__ import absolute_import
@@ -286,6 +286,8 @@ class mpbuilder:
         if self.dataName is None:
             print("Please provide SAXS dat file!")
             return
+        cmd.cache("clear")
+        self.runNumber += 1
         seconds_init = time.time()
         assemblyType = self.form.input_type.currentText()
         print('Assembly is: {}'.format(assemblyType))
@@ -296,15 +298,18 @@ class mpbuilder:
         rot_min_ang = self.form.input_rotAng_min.value()
         rot_max_ang = self.form.input_rotAng_max.value() + 1
         rot_step_ang = self.form.input_rotAng_step.value()
+        cmd.delete(self.modelName)
+        self.bestModel = ""
+        self.fit = ""
         # type of protein-membrane assembly
         if assemblyType == "detergent":
             dens_min_ang = self.form.input_rotAng_min_2.value()
             dens_max_ang = self.form.input_rotAng_max_2.value() + 1
             dens_step_ang = self.form.input_rotAng_step_2.value()
-            bestModel, fit = crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
+            bestModel, fit, run = crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                                                        dens_min_ang, dens_max_ang, dens_step_ang,
                                                        self.protName, self.membName, self.dataName,
-                                                       prefixName)
+                                                       prefixName, self.runNumber)
 
 
         elif assemblyType == "salipro":
@@ -316,10 +321,10 @@ class mpbuilder:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
+            bestModel, fit, run = crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                                                      scaffold_min, scaffold_max, scaffold_step,
                                                      self.protName, self.membName, self.scafName, self.dataName,
-                                                     prefixName)
+                                                     prefixName, self.runNumber)
         elif assemblyType == "nanodisc":
             cmd.reset()
             y_min = self.form.input_rotAng_min.value()
@@ -329,15 +334,16 @@ class mpbuilder:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             refresh()
-            bestModel, fit = crysolRefinementNanodisc(rot_min_ang, rot_max_ang, rot_step_ang,
+            bestModel, fit, run = crysolRefinementNanodisc(rot_min_ang, rot_max_ang, rot_step_ang,
                                                       y_min, y_max, y_step,
                                                       self.protName, self.membName, self.scafName, self.dataName,
-                                                      prefixName)
+                                                      prefixName, self.runNumber)
         else:
             print("Refinement is not supported for assembly type {}".format(assemblyType))
             return
         self.modelName = bestModel
         self.fit = fit
+        self.runNumber += run
         seconds_tmp = time.time()
         refresh()
         t = int((seconds_tmp - seconds_init))
@@ -346,7 +352,9 @@ class mpbuilder:
 
     def run_build(self):
         # callback for the "Build" button
+        cmd.cache("clear")
         seconds_init = time.time()
+        self.runNumber += 1
         # get form data
         prefixName = self.form.output_filename_prefix.text()
         assemblyType = self.form.input_type.currentText()
@@ -359,7 +367,7 @@ class mpbuilder:
         # executions depends on the assembly type
         if assemblyType == "detergent":
             # execute detergent builder
-            self.modelName = builderDetergent(self.protName, self.membName, prefixName)
+            self.modelName = builderDetergent(self.protName, self.membName, prefixName, self.runNumber)
         elif assemblyType == "salipro":
             #  execute salipro builder
             rotAng = self.form.input_rotAng.value()
@@ -369,7 +377,7 @@ class mpbuilder:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             self.modelName = builderSalipro(self.protName, self.scafName, self.membName, prefixName,
-                                            numScaffoldCopies, rotAng)
+                                            self.runNumber, numScaffoldCopies, rotAng)
 
         elif assemblyType == "nanodisc":
             # execute nanodisc builder
@@ -378,21 +386,21 @@ class mpbuilder:
                 self.membName = builderMembrane(self.membName)
                 self.form.input_filename_lip.setText(self.membName)
             #  execute builder
-            self.modelName = builderNanodisc(self.protName, self.membName, self.scafName, prefixName)
+            self.modelName = builderNanodisc(self.protName, self.membName, self.scafName, prefixName, self.runNumber)
 
         elif assemblyType == "bilayer":
             # execute detergent builder
-            self.membName = builderMembrane(self.membName)
+            self.membName = builderMembrane(self.membName, self.runNumber)
             self.form.input_filename_lip.setText(self.membName)
 
         elif assemblyType == "bicelle":
             # execute bicelle builder
             # build bilayer if check box is activated
             if self.buildMemb:
-                self.membName = builderMembrane(self.membName)
+                self.membName = builderMembrane(self.membName, self.runNumber)
                 self.form.input_filename_lip.setText(self.membName)
             #  execute builder
-            self.modelName = builderBicelle(self.protName, self.membName, self.scafName, prefixName)
+            self.modelName = builderBicelle(self.protName, self.membName, self.scafName, prefixName, self.runNumber)
 
         refresh()
         print("Model name is {}".format(self.modelName))
@@ -446,7 +454,11 @@ class mpbuilder:
 
         # open always on detergents
         self.changeForm("detergent")
-        self.protName = self.membName = self.scafName = self.dataName = None
+        self.protName = None
+        self.membName = None
+        self.scafName = None
+        self.dataName = None
+        self.runNumber = 0
         # name of the model
         self.modelName = ""
         # prefix
