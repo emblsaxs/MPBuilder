@@ -228,7 +228,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, runNumber, n_sym=9, 
     print('copies of scaffold: ' + str(n_sym))
 
     print('rotation angle of scaffold is: ' + str(initRotAngle))
-    cmd.orient()
+
     empty = False
     if protein is None: empty = True
     print("State of empty/not-empty: {}".format(empty))
@@ -319,7 +319,6 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     scaffold in this case is a double belt of MSP
     """
     # Checking time of builder function execution
-    cmd.orient()
     if protein != None:
         print('protein is: ' + protein)
     print('scaffold is: ' + scaffold)
@@ -379,7 +378,7 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
     """
     builds MP - detergent complex using a single detergent molecule
     """
-    cmd.orient()
+
     # Checking object names
     print('detergent is: ' + detergent)
     tmp_deter = "tmp_deter"+str(runNumber)
@@ -475,7 +474,6 @@ def fibonacci_sphere(samples):
 
 def builderMicelle(detergent, r, numberOfDetergents):
     refresh()
-    cmd.orient()
     i = 0
     numberOfDetergents = int(numberOfDetergents)
     # FIXME: if number of detergents > 360, molecules may clash in space
@@ -523,7 +521,6 @@ def builderMicelle(detergent, r, numberOfDetergents):
 def builderCorona(theta, fi, detergent, protein, detR):
     # Build symmates with desired rotations
     refresh()
-    cmd.orient()
     cmd.pseudoatom("origin0"+protein, pos=[0, 0, 0])
     thetaSteps = len(theta)
     angleVer = np.linspace(-90, 90, thetaSteps)
@@ -651,7 +648,6 @@ def builderBicelle(protein, membrane, detergent, prefixName, runNumber, refine=F
     builds MP - bicelle complex using a membrane and a single detergent molecule
     """
     # Checking object names
-    cmd.orient()
     print('protein   is: ' + protein)
     print('membrane  is: ' + membrane)
     print('detergent is: ' + detergent)
