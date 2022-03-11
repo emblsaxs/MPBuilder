@@ -341,7 +341,8 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     center(tmp_scaffold)
     cmd.pseudoatom(tmp_origin, pos=[0, 0, 0])
     cmd.origin(tmp_origin)
-    outRadius = findAverDist(tmp_scaffold)
+    #outRadius = findAverDist(tmp_scaffold) #doubles time for each run
+    outRadius = TMdistCheck(tmp_scaffold, 0.2)
     print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
     cmd.remove("br. org and {} beyond {} of {}".format(tmp_memb, outRadius, tmp_origin))
