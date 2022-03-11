@@ -2,7 +2,7 @@
 PyMOL simple membrane builder
 
 The plugin is constructed to facilitate SAXS analysis/modeling of membrane protein systems
-(D.Molodenskiy & H.D.T.Mertens 2019-2020 for BioSAXS team)
+(D.Molodenskiy & H.D.T.Mertens 2019-2022 for BioSAXS team)
 """
 
 from __future__ import absolute_import
