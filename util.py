@@ -40,7 +40,7 @@ def predcrysol(modelName, crycalc):
     # run crysol in fit mode
 
 
-def fitcrysol(modelName, dataName, crycalc, showFit):
+def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
     if dataName is None:
         print("Please set the SAXS .dat file to fit")
         return False
@@ -52,32 +52,33 @@ def fitcrysol(modelName, dataName, crycalc, showFit):
         return False
     fileFullPath = os.path.abspath(dataName)
     pdbFullPath = os.path.abspath(modelName + ".pdb")
-
-    with tempdir.TemporaryDirectory() as tmpdir:
-        if crycalc == "yes":
-            print("CRYSOL calculation using explicit hydrogens")
-            systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
-        else:
-            systemCommand(["crysol", pdbFullPath, fileFullPath])
-        logfile = modelName + "00.log"
-        result = parseCrysolLog(logfile)
-        Rg = result['Rg']
-        chi2 = result['chi2']
-        eDens = result['eDens']
-        df = tmpdir.move_out_numbered(modelName + "00.fit", modelName, '.fit')
-    fitResult = result
-    fit = os.path.basename(df)
+    if tmpdir is None: tmpdir = tempdir.TemporaryDirectory()
+    #with tempdir.TemporaryDirectory() as tmpdir:
+    if crycalc == "yes":
+        print("CRYSOL calculation using explicit hydrogens")
+        systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
+    else:
+        systemCommand(["crysol", pdbFullPath, fileFullPath])
+    logfile = modelName + "00.log"
+    fitFile = modelName + "00.fit"
+    fitResult = parseCrysolLog(logfile)
+    Rg    = fitResult['Rg']
+    chi2  = fitResult['chi2']
+    eDens = fitResult['eDens']
+    #df = tmpdir.move_out_numbered(modelName + "00.fit", modelName, '.fit')
+    #fitResult = result
+    #fit = os.path.basename(df)
     # logfn = tmpdir.move_out_numbered(logfile, fid, '.log')
 
-    print(".log file written to " + logfile)
-    print(".fit file written to " + df)
+    #print(".log file written to " + logfile)
+    #print(".fit file written to " + fitfile)
 
     print("CRYSOL Theoretical Rg = " + repr(Rg))
     print("CRYSOL Chi-square = " + repr(chi2))
     print("CRYSOL Average electron density = " + repr(eDens))
     if showFit:
-        systemCommand([viewer, fit])
-    return fit, fitResult
+        systemCommand([viewer, fitFile])
+    return fitFile, fitResult
 
 
 def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
@@ -103,7 +104,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} num: {}".format(ang, num))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(numScaffoldCopies))) +
                            " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['chi2']))
@@ -121,7 +122,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
     cmd.wizard()
     print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-    return best, fitBest, counter1*counter2
+    return best, fitBest, runNumber
 
     # run crysol in fit mode for detergents
 
@@ -148,7 +149,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} densAng: {}".format(ang, densAng))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(dens))) +
                            " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['chi2']))
@@ -163,13 +164,13 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                 else:
                     cmd.delete(modelName)
         if res['chi2'] < 9999:
-            tmpdir.move_out(best + ".pdb")
+            #tmpdir.move_out(best + ".pdb")
             tmpdir.move_out(fitBest)
         else:
             return "Bad parameters", "No good fit found!"
     print("Best model: Lipid Density : {} Max Polar Angle = {})".format(res['lipid density'], res['max-polar-angle']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-    return best, fitBest, counter1*counter2
+    return best, fitBest, runNumber
 
     # run crysol in fit mode for nanodisc
 
@@ -195,7 +196,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     # print("Bad model parameters: " + str(z))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(ys))) +
                            " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['chi2']))
@@ -213,7 +214,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
         tmpdir.move_out(fitBest)
     print("Best model: Offset coordinates in XY plane : ({},{})".format(res['x-offset'], res['y-offset']))
     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-    return best, fitBest, counter1*counter2
+    return best, fitBest, runNumber
 
 
 def builderSalipro(protein, scaffold, membrane, prefixName, runNumber, n_sym=9, initRotAngle=45, refine=False):
@@ -341,7 +342,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     center(tmp_scaffold)
     cmd.pseudoatom(tmp_origin, pos=[0, 0, 0])
     cmd.origin(tmp_origin)
-    #outRadius = findAverDist(tmp_scaffold) #doubles time for each run
+    #outRadius = findAverDist(tmp_scaffold)
     outRadius = TMdistCheck(tmp_scaffold, 0.2)
     print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
