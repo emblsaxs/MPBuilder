@@ -117,11 +117,16 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-        tmpdir.move_out(best + ".pdb")
+        if best is '':
+            print("No satisfactory solution was found. Please change the range of parameters.")
+            best    = modelName
+            fitBest = fit
+        else:
+            print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
+            print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+        #tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     cmd.wizard()
-    print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
-    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
     return best, fitBest, runNumber
 
     # run crysol in fit mode for detergents
@@ -163,13 +168,16 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-        if res['chi2'] < 9999:
-            #tmpdir.move_out(best + ".pdb")
-            tmpdir.move_out(fitBest)
-        else:
-            return "Bad parameters", "No good fit found!"
-    print("Best model: Lipid Density : {} Max Polar Angle = {})".format(res['lipid density'], res['max-polar-angle']))
-    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+                if best is '':
+                    print("No satisfactory solution was found. Please change the range of parameters.")
+                    best = modelName
+                    fitBest = fit
+                else:
+                    print("Best model: density angle = {}; Polar angle = {}".format(res['lipid density'],
+                                                                                    res['max-polar-angle']))
+                    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+        #tmpdir.move_out(best + ".pdb")
+        tmpdir.move_out(fitBest)
     return best, fitBest, runNumber
 
     # run crysol in fit mode for nanodisc
@@ -210,10 +218,17 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-        tmpdir.move_out(best + ".pdb")
+                if best is '':
+                    print("No satisfactory solution was found. Please change the range of parameters.")
+                    best = modelName
+                    fitBest = fit
+                else:
+                    print("Best model: X offset = {}; Y offset = {}".format(res['x-offset'],
+                                                                                    res['y-offset']))
+                    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+            #tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
-    print("Best model: Offset coordinates in XY plane : ({},{})".format(res['x-offset'], res['y-offset']))
-    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+        cmd.wizard()
     return best, fitBest, runNumber
 
 
