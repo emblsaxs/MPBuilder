@@ -114,7 +114,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} densAng: {}".format(ang, densAng))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fitResult = fitcrysol(modelName, os.path.basename(dataName))
+                fitFile, fitResult = fitcrysol(modelName, os.path.basename(dataName))
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(dens))) +
                            " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['Chi^2']))
@@ -125,23 +125,22 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     res['lipid density'] = densAng
                     res['max-polar-angle'] = ang
                     best = modelName
+                    fitBest = fitFile
                 else:
                     cmd.delete(modelName)
                 if best is '':
                     print("No satisfactory solution was found. Please change the range of parameters.")
                     best = modelName
-                    fitBest = fit
+                    fitBest = fitFile
                 else:
                     print("Best model: density angle = {}; Polar angle = {}".format(res['lipid density'],
                                                                                     res['max-polar-angle']))
-                    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
+                    print("Chi^2 : {} Best model name : {}".format(res['Chi^2'], best))
         # tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     return best, fitBest, runNumber
 
-    # run crysol in fit mode for nanodisc
-
-
+# run crysol in fit mode for nanodisc
 def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                              protName, membName, scafName, dataName, prefixName, runNumber):
     """Refine the membrane protein detergent complex against experimental data"""
@@ -162,14 +161,14 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     # print("Bad model parameters: " + str(z))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName))
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(ys))) +
-                           " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['chi2']))
+                           " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['Chi^2']))
                 # if model fits better - store it
-                if float(fitResult['chi2']) < float(res['chi2']):
+                if float(fitResult['Chi^2']) < float(res['Chi^2']):
                     if best != "": cmd.delete(best)
-                    res['chi2'] = fitResult['chi2']
+                    res['Chi^2'] = fitResult['Chi^2']
                     res['x-offset'] = x
                     res['y-offset'] = y
                     best = modelName
@@ -183,8 +182,8 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                 else:
                     print("Best model: X offset = {}; Y offset = {}".format(res['x-offset'],
                                                                             res['y-offset']))
-                    print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-            # tmpdir.move_out(best + ".pdb")
+                    print("Chi^2 : {} Best model name : {}".format(res['Chi^2'], best))
+        # tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
         cmd.wizard()
     return best, fitBest, runNumber
