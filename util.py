@@ -7,40 +7,19 @@ import numpy as np
 from . import tempdir
 import os
 from sys import platform
+import crysol
+import saxsdocument
+import shutil
 
 viewer = 'primus'
 if platform == 'win32' or platform == 'win64':
     viewer = 'primusqt'
 
 
-# run crysol in predictive mode for a given selection
-def predcrysol(modelName, crycalc):
-    """Predicts scattering from the currently active model"""
-    with tempdir.TemporaryDirectory() as tmpdir:
-        if os.path.isfile(modelName + ".pdb"):
-            print("Warning: PDB file already exists! Will be rewritten.")
-        cmd.save(modelName + ".pdb", modelName)
-        pdbFullPath = os.path.abspath(modelName + ".pdb")
-        print("{} is saved to {}".format(modelName, pdbFullPath))
-        if crycalc == "yes":
-            print("CRYSOL calculation using explicit hydrogens")
-            systemCommand(["crysol", "-eh", pdbFullPath])
-        else:
-            systemCommand(["crysol", pdbFullPath])
-        result = parseCrysolLog(modelName + "00.log")
-        Rg = result['Rg']
-        eDens = result['eDens']
-        df = tmpdir.move_out_numbered(modelName + "00.int", modelName, '.int')
-
-    print("CRYSOL Theoretical Rg = " + repr(Rg))
-    print("CRYSOL Average electron density = " + repr(eDens))
-    print(".int file written to " + df)
-    return df
-
-    # run crysol in fit mode
-
-
-def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
+def fitcrysol(modelName, dataName, showFit=False):
+    """
+    fit by crysol and (optionally) show the fit in primus
+    """
     if dataName is None:
         print("Please set the SAXS .dat file to fit")
         return False
@@ -50,35 +29,18 @@ def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
     if not os.path.isfile(modelName + ".pdb"):
         print("PDB file \'" + modelName + ".pdb" + "\' not found")
         return False
-    fileFullPath = os.path.abspath(dataName)
-    pdbFullPath = os.path.abspath(modelName + ".pdb")
-    if tmpdir is None: tmpdir = tempdir.TemporaryDirectory()
-    #with tempdir.TemporaryDirectory() as tmpdir:
-    if crycalc == "yes":
-        print("CRYSOL calculation using explicit hydrogens")
-        systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
-    else:
-        systemCommand(["crysol", pdbFullPath, fileFullPath])
-    logfile = modelName + "00.log"
-    fitFile = modelName + "00.fit"
-    fitResult = parseCrysolLog(logfile)
-    Rg    = fitResult['Rg']
-    chi2  = fitResult['chi2']
-    eDens = fitResult['eDens']
-    #df = tmpdir.move_out_numbered(modelName + "00.fit", modelName, '.fit')
-    #fitResult = result
-    #fit = os.path.basename(df)
-    # logfn = tmpdir.move_out_numbered(logfile, fid, '.log')
-
-    #print(".log file written to " + logfile)
-    #print(".fit file written to " + fitfile)
-
-    print("CRYSOL Theoretical Rg = " + repr(Rg))
-    print("CRYSOL Chi-square = " + repr(chi2))
-    print("CRYSOL Average electron density = " + repr(eDens))
+    #dataFullPath = os.path.abspath(dataName)
+    pdbFullPath = modelName + ".pdb"
+    print("CRYSOL calculation using explicit hydrogens")
+    if os.path.exists("tmp.pdb"):
+        os.remove("tmp.pdb")
+    shutil.copy(pdbFullPath, "tmp.pdb")
+    s, I, err, Ifit, stats = crysol.fit("tmp.pdb", dataName, explicit_hydrogens=True)
+    fitFile = modelName + ".fir"
+    saxsdocument.write_fir(fitFile, s, I, err, Ifit, stats)
     if showFit:
         systemCommand([viewer, fitFile])
-    return fitFile, fitResult
+    return fitFile, stats
 
 
 def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
@@ -89,7 +51,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
      complex against experimental data"""
     angs = np.arange(rot_min_ang, rot_max_ang, rot_step_ang)
     numScaffoldCopies = np.arange(scaffold_min, scaffold_max, scaffold_step)
-    res = {"angle": -9999, "number-of-scaffolds": -9999, "chi2": 9999}
+    res = {"angle": -9999, "number-of-scaffolds": -9999, "Chi^2": 9999}
     with tempdir.TemporaryDirectory() as tmpdir:
         # copy data file
         tmpdir.copy_in(dataName)
@@ -104,41 +66,39 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} num: {}".format(ang, num))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fitFile, fitResult = fitcrysol(modelName, os.path.basename(dataName))
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(numScaffoldCopies))) +
-                           " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['chi2']))
-                if float(fitResult['chi2']) < float(res['chi2']):
+                           " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['Chi^2']))
+                if float(fitResult['Chi^2']) < float(res['Chi^2']):
                     if best != "": cmd.delete(best)
-                    res['chi2'] = fitResult['chi2']
+                    res['Chi^2'] = fitResult['Chi^2']
                     res['number-of-scaffolds'] = num
                     res['angle'] = ang
                     best = modelName
-                    fitBest = fit
+                    fitBest = fitFile
                 else:
                     cmd.delete(modelName)
         if best is '':
             print("No satisfactory solution was found. Please change the range of parameters.")
-            best    = modelName
-            fitBest = fit
+            best = modelName
+            fitBest = fitFile
         else:
             print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
-            print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-        #tmpdir.move_out(best + ".pdb")
+            print("Chi^2 : {} Best model name : {}".format(res['Chi^2'], best))
+        # tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     cmd.wizard()
     return best, fitBest, runNumber
 
     # run crysol in fit mode for detergents
-
-
 def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                               dens_min_ang, dens_max_ang, dens_step_ang,
                               protName, membName, dataName, prefixName, runNumber):
     """Refine the membrane protein detergent complex against experimental data"""
     angs = np.arange(rot_min_ang, rot_max_ang, rot_step_ang)
     dens = np.arange(dens_min_ang, dens_max_ang, dens_step_ang)
-    res = {"angle": -9999, "number-of-scaffolds": -9999, "chi2": 9999}
+    res = {"angle": -9999, "number-of-scaffolds": -9999, "Chi^2": 9999}
     with tempdir.TemporaryDirectory() as tmpdir:
         # copy data file
         tmpdir.copy_in(dataName)
@@ -154,18 +114,17 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} densAng: {}".format(ang, densAng))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fitResult = fitcrysol(modelName, os.path.basename(dataName))
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(dens))) +
-                           " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['chi2']))
+                           " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['Chi^2']))
                 # if model fits better - store it
-                if float(fitResult['chi2']) < float(res['chi2']):
+                if float(fitResult['Chi^2']) < float(res['Chi^2']):
                     if best != "": cmd.delete(best)
-                    res['chi2'] = fitResult['chi2']
+                    res['Chi^2'] = fitResult['Chi^2']
                     res['lipid density'] = densAng
                     res['max-polar-angle'] = ang
                     best = modelName
-                    fitBest = fit
                 else:
                     cmd.delete(modelName)
                 if best is '':
@@ -176,7 +135,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Best model: density angle = {}; Polar angle = {}".format(res['lipid density'],
                                                                                     res['max-polar-angle']))
                     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-        #tmpdir.move_out(best + ".pdb")
+        # tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     return best, fitBest, runNumber
 
@@ -194,7 +153,6 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
         tmpdir.copy_in(dataName)
         best = ""
         fitBest = ""
-
         for counter1, x in enumerate(xs):
             for counter2, y in enumerate(ys):
                 cmd.refresh()
@@ -224,9 +182,9 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     fitBest = fit
                 else:
                     print("Best model: X offset = {}; Y offset = {}".format(res['x-offset'],
-                                                                                    res['y-offset']))
+                                                                            res['y-offset']))
                     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-            #tmpdir.move_out(best + ".pdb")
+            # tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
         cmd.wizard()
     return best, fitBest, runNumber
@@ -357,7 +315,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     center(tmp_scaffold)
     cmd.pseudoatom(tmp_origin, pos=[0, 0, 0])
     cmd.origin(tmp_origin)
-    #outRadius = findAverDist(tmp_scaffold)
+    # outRadius = findAverDist(tmp_scaffold)
     outRadius = TMdistCheck(tmp_scaffold, 0.2)
     print("Max distance from origin to scaffold in xy plane: {}".format(outRadius))
     # remove lipids beyond border encased by MSP
@@ -378,16 +336,16 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     else:
         cmd.remove("br. org and {} within 0.3 of pol. and not hydro".format(tmp_memb))
         s = "{}_{}_{}".format(protein, membrane, scaffold)
-    if refine: s += "{}_{}".format(int(x), int(y))
+    if refine: s = "{}_{}_{}_{}_{}".format(protein, membrane, scaffold, int(x), int(y))
     if prefixName:
         s = "{}{}".format(prefixName, s)
-    cmd.create(s, "({},{}, {})".format(protein, tmp_scaffold, tmp_memb))
-    cmd.save(s + ".pdb", s)
+    cmd.create(s, "({},{},{})".format(tmp_prot, tmp_scaffold, tmp_memb))
 
     cmd.delete(tmp_memb)
     cmd.delete(tmp_scaffold)
     cmd.delete(tmp_prot)
     cmd.delete(tmp_origin)
+    cmd.save(s + ".pdb", s)
     return s
 
 
@@ -398,8 +356,8 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
 
     # Checking object names
     print('detergent is: ' + detergent)
-    tmp_deter = "tmp_deter"+str(runNumber)
-    tmp_prot  = "tmp_prot" + str(runNumber)
+    tmp_deter = "tmp_deter" + str(runNumber)
+    tmp_prot = "tmp_prot" + str(runNumber)
     tmp_origin = "origin0" + str(runNumber)
     cmd.copy(tmp_deter, detergent)  # store initial
     # molecules initially aligned along Z-axis on import, need to rotate into XY plane for protocol: 
@@ -416,7 +374,7 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
         else:
             radius = findMaxDist(tmp_deter)
             numberOfDetergents = 300
-        s = builderMicelle(tmp_deter, 2*radius, numberOfDetergents)
+        s = builderMicelle(tmp_deter, 2 * radius, numberOfDetergents)
         cmd.save(s + ".pdb", s)
         return s
 
@@ -459,7 +417,7 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
         s = "{}_{}_{:d}_{:d}".format(protein, detergent, int(ang), int(densAng))
     else:
         s = "{}_complex_with_{}".format(protein, detergent)
-    #print(f"REfINE={refine} for {s}")
+    # print(f"REfINE={refine} for {s}")
     if prefixName:
         s = "{}{}".format(prefixName, s)
     # affineStretch("corona", 1.1)
@@ -470,6 +428,7 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
     cmd.delete(tmp_origin)
     cmd.save(s + ".pdb", s)
     return s
+
 
 def fibonacci_sphere(samples):
     points = []
@@ -496,10 +455,10 @@ def builderMicelle(detergent, r, numberOfDetergents):
     # FIXME: if number of detergents > 360, molecules may clash in space
     points = fibonacci_sphere(numberOfDetergents)
     print("Rotating detergent molecule for build protocol...")
-    for x,y,z in points:
+    for x, y, z in points:
         i += 1
         t = np.degrees(np.arccos(z))
-        p = np.degrees(np.arctan(y/x))
+        p = np.degrees(np.arctan(y / x))
         cmd.copy("seg{}".format(i), detergent)
         cmd.alter("seg{}".format(i), "resi={}".format(i))  # assign residue numbers
         # put to to knot of fibonacci grid
@@ -508,7 +467,7 @@ def builderMicelle(detergent, r, numberOfDetergents):
         if x < 0: cmd.rotate("z", 180, "seg{}".format(i))
         cmd.rotate("z", str(t), "seg{}".format(i))
         cmd.rotate("y", str(p), "seg{}".format(i))
-        #cmd.translate("[{},{},{}]".format(r * x, r * y, r * z), "seg{}".format(i))
+        # cmd.translate("[{},{},{}]".format(r * x, r * y, r * z), "seg{}".format(i))
     # if numberOfDetergents > 360:
     #     x1 = range(-180, 180)
     #     x2 = range(0, 360)
@@ -538,7 +497,7 @@ def builderMicelle(detergent, r, numberOfDetergents):
 def builderCorona(theta, fi, detergent, protein, detR):
     # Build symmates with desired rotations
     refresh()
-    cmd.pseudoatom("origin0"+protein, pos=[0, 0, 0])
+    cmd.pseudoatom("origin0" + protein, pos=[0, 0, 0])
     thetaSteps = len(theta)
     angleVer = np.linspace(-90, 90, thetaSteps)
     i = 0
@@ -598,7 +557,7 @@ def builderCorona(theta, fi, detergent, protein, detR):
 
     cmd.create("corona", "seg*")
     cmd.delete("seg*")
-    cmd.delete("origin0"+protein)
+    cmd.delete("origin0" + protein)
 
 
 def builderMembrane(lipid, runNumber):
@@ -609,7 +568,7 @@ def builderMembrane(lipid, runNumber):
     cmd.load(lipid + ".pdb", "start_lipid")
     cmd.alter("start_lipid", "chain = 'X'")
     cmd.alter("start_lipid", "segi = 'mema'")
-#    cmd.rotate('x', 90, "start_lipid")
+    #    cmd.rotate('x', 90, "start_lipid")
     dmax = findMaxDist("start_lipid")
 
     # create lipid copies and translate them to new position
@@ -676,7 +635,7 @@ def builderBicelle(protein, membrane, detergent, prefixName, runNumber, refine=F
     print("State of empty/not-empty: {}".format(empty))
     # copies to delete later
     tmp_memb = "tmp_memb" + str(runNumber)
-    tmp_deter =  "tmp_deter"  + str(runNumber)
+    tmp_deter = "tmp_deter" + str(runNumber)
     cmd.copy(tmp_memb, membrane)  # store initial
     cmd.copy(tmp_deter, detergent)  # store initial
 
@@ -716,12 +675,12 @@ def builderBicelle(protein, membrane, detergent, prefixName, runNumber, refine=F
         phi = range(0, 361, 10)  # find angular step from average density?
 
     builderCorona(theta, phi, tmp_deter, r, detR)
-    #affineStretch("corona", 1.1)
+    # affineStretch("corona", 1.1)
     # remove lipids inside pore
     cmd.remove("br. {} within {} of {}".format(tmp_memb, r / 2.0, tmp_origin))
     cmd.origin(tmp_origin)
     # remove lipids beyond border encased by MSP
-    #print("org and tmp_memb beyond {} of origin0".format(r))
+    # print("org and tmp_memb beyond {} of origin0".format(r))
     cmd.remove("br. org and {} beyond {} of {}".format(tmp_memb, r, tmp_origin))
     # remove lipids clashing with tmp_protein core and MSP scaffold and combine into a single PyMol object
     cmd.remove("br. org and {} within 0.3 of pol. and not hydro".format(tmp_memb))
