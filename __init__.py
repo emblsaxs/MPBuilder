@@ -261,11 +261,9 @@ class mpbuilder:
         """Prediction of model scattering"""
         # def predcrysol(crycalc, models, prefix="tmp", param=" "):
         if self.modelName:
-            df = predcrysol(self.modelName, "yes")
-            if os.path.exists(df):
-                print('Theoretical SAXS profile generated')
-                systemCommand([viewer, df])
-                self.prediction = df
+            suc = predcrysol(self.modelName)
+            if (not suc):
+                print('Error: PDB file not written! Theoretical SAXS profile generation failed')
         else:
             print("pdb file is missing. Model Name: {}".format(self.modelName))
 
@@ -273,7 +271,7 @@ class mpbuilder:
     def run_crysol_fit(self):
         """Calculation of model fit"""
         if (self.modelName != "" and self.dataName != ""):
-            fitcrysol(self.modelName, self.dataName, "yes", True)
+            fitcrysol(self.modelName, self.dataName, True)
         else:
             print('pdb or SAXS data file is missing!')
             print('model file: {} data file: {}'.format(self.modelName, self.dataName))
@@ -465,8 +463,6 @@ class mpbuilder:
         self.modelName = ""
         # prefix
         self.prefixName = ""
-        # crysol int prediction
-        self.prediction = ""
         # crysol fit
         self.fit = ""
         # result of the fit

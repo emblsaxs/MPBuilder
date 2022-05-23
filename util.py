@@ -15,6 +15,20 @@ viewer = 'primus'
 if platform == 'win32' or platform == 'win64':
     viewer = 'primusqt'
 
+def predcrysol(modelName):
+    """
+    predict scattering from a model
+    """
+    with tempdir.TemporaryDirectory() as tmpdir:
+        cmd.save(modelName + ".pdb", modelName)
+        if not os.path.isfile(modelName + ".pdb"):
+            print("PDB file \'" + modelName + ".pdb" + "\' not found")
+            return False
+        print("CRYSOL prediction using 20 harmonics...")
+        s, I = crysol.predict(modelName + ".pdb", explicit_hydrogens=True)
+        saxsdocument.write_dat(modelName + ".dat", s, I, list(np.zeros_like(I)), {})
+        systemCommand([viewer, modelName + ".dat"])
+        return True
 
 def fitcrysol(modelName, dataName, showFit=False):
     """
@@ -31,7 +45,7 @@ def fitcrysol(modelName, dataName, showFit=False):
         return False
     #dataFullPath = os.path.abspath(dataName)
     pdbFullPath = modelName + ".pdb"
-    print("CRYSOL calculation using explicit hydrogens")
+    print("CRYSOL calculation using explicit hydrogens...")
     if os.path.exists("tmp.pdb"):
         os.remove("tmp.pdb")
     shutil.copy(pdbFullPath, "tmp.pdb")
