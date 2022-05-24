@@ -160,7 +160,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
     """Refine the membrane protein detergent complex against experimental data"""
     xs = np.arange(x_min, x_max, x_step)
     ys = np.arange(y_min, y_max, y_step)
-    res = {"x-offset": -9999, "y-offset": -9999, "chi2": 9999}
+    res = {"x-offset": -9999, "y-offset": -9999, "Chi^2": 9999}
     with tempdir.TemporaryDirectory() as tmpdir:
         # copy data file
         tmpdir.copy_in(dataName)
