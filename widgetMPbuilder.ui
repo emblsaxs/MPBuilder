@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>639</width>
-    <height>579</height>
+    <width>693</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,10 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string notr="true">SAXS data: </string>
+        <string notr="true">SAXS data &lt;html&gt;&lt;b&gt;(&amp;#8491;&lt;sup&gt;-1&lt;/sup&gt;&lt;b/&gt;&lt;html/&gt;): </string>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
