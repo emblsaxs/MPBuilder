@@ -24,13 +24,17 @@ def predcrysol(modelName, crycalc):
         print("{} is saved to {}".format(modelName, pdbFullPath))
         if crycalc == "yes":
             print("CRYSOL calculation using explicit hydrogens")
-            systemCommand(["crysol", "-eh", pdbFullPath])
+            #systemCommand(["crysol", "-eh", pdbFullPath])
+            systemCommand(["crysol", "-explicit-hydrogens", pdbFullPath])
         else:
             systemCommand(["crysol", pdbFullPath])
-        result = parseCrysolLog(modelName + "00.log")
+        #result = parseCrysolLog(modelName + "00.log")
+        print("Modelname for CRYSOL is: " + modelName)
+        result = parseCrysolLog(modelName + ".log")
         Rg = result['Rg']
         eDens = result['eDens']
-        df = tmpdir.move_out_numbered(modelName + "00.int", modelName, '.int')
+        #df = tmpdir.move_out_numbered(modelName + "00.int", modelName, '.int')
+        df = tmpdir.move_out_numbered(modelName + ".int", modelName, '.int')
 
     print("CRYSOL Theoretical Rg = " + repr(Rg))
     print("CRYSOL Average electron density = " + repr(eDens))
@@ -56,11 +60,14 @@ def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
     #with tempdir.TemporaryDirectory() as tmpdir:
     if crycalc == "yes":
         print("CRYSOL calculation using explicit hydrogens")
-        systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
+        #systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
+        systemCommand(["crysol", "-explicit-hydrogens", pdbFullPath, fileFullPath])
     else:
         systemCommand(["crysol", pdbFullPath, fileFullPath])
-    logfile = modelName + "00.log"
-    fitFile = modelName + "00.fit"
+#    logfile = modelName + "00.log"
+    logfile = modelName + '_' + dataName[:-4] + ".log"
+#    fitFile = modelName + "00.fit"
+    fitFile = modelName + '_' + dataName[:-4] + ".fit"
     fitResult = parseCrysolLog(logfile)
     Rg    = fitResult['Rg']
     chi2  = fitResult['chi2']
@@ -124,7 +131,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
         else:
             print("Best model: Number of Scaffolds = {}; Angle = {}".format(res['number-of-scaffolds'], res['angle']))
             print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-        #tmpdir.move_out(best + ".pdb")
+        tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     cmd.wizard()
     return best, fitBest, runNumber
@@ -176,7 +183,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Best model: density angle = {}; Polar angle = {}".format(res['lipid density'],
                                                                                     res['max-polar-angle']))
                     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-        #tmpdir.move_out(best + ".pdb")
+        tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
     return best, fitBest, runNumber
 
@@ -226,7 +233,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     print("Best model: X offset = {}; Y offset = {}".format(res['x-offset'],
                                                                                     res['y-offset']))
                     print("Chi^2 : {} Best model name : {}".format(res['chi2'], best))
-            #tmpdir.move_out(best + ".pdb")
+            tmpdir.move_out(best + ".pdb")
         tmpdir.move_out(fitBest)
         cmd.wizard()
     return best, fitBest, runNumber
