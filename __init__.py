@@ -90,6 +90,8 @@ class mpbuilder:
             self.form.input_rotAng.setEnabled(False)
             self.form.checkBox_prebuild_bilayer.setEnabled(False)
             self.form.checkBox_emptyAssembly.setEnabled(True)
+            self.form.checkBox_expHyd.setEnabled(True)
+            self.form.checkBox_const.setEnabled(True)
         elif assembly == "salipro":
             self.form.label_6.setEnabled(isProtein)
             self.form.input_filename_prot.setEnabled(isProtein)
@@ -229,6 +231,30 @@ class mpbuilder:
             print("Centering and aligning membrane protein {} for model building ...".format(self.protName))
             center(self.protName)
 
+    def explicitHydrogens(self):
+        """
+        Use explicit hydrogen flag for CRYSOL
+        """
+        if self.form.checkBox_expHyd.isChecked():
+            # print(f"Using explicit hydrogens for fit ...")
+            print("Using explicit hydrogens for intensities calculation of {} ...".format(self.modelName))
+            self.explicitHydrogens = True
+        else:
+            print("Using implicit hydrogens for intensities calculation of {} ...".format(self.modelName))
+            self.explicitHydrogens = False
+
+    def constantSubtraction(self):
+        """
+        Use constant flag for CRYSOL
+        """
+        if self.form.checkBox_const.isChecked():
+            # print(f"Using constant for fit ...")
+            print("Using constant for fit of {} ...".format(self.modelName))
+            self.constantSubtraction = True
+        else:
+            print("Not using constant for fit of {} ...".format(self.modelName))
+            self.constantSubtraction = False
+
     def emptyAssembly(self):
         assemblyType = self.form.input_type.currentText()
         if self.form.checkBox_emptyAssembly.isChecked():
@@ -261,7 +287,8 @@ class mpbuilder:
         """Prediction of model scattering"""
         # def predcrysol(crycalc, models, prefix="tmp", param=" "):
         if self.modelName:
-            df = predcrysol(self.modelName, "yes")
+            #df = predcrysol(self.modelName, "yes")
+            df = predcrysol(self.modelName, self.explicitHydrogens, self.constantSubtraction, "yes")
             if os.path.exists(df):
                 print('Theoretical SAXS profile generated')
                 systemCommand([viewer, df])
@@ -273,7 +300,8 @@ class mpbuilder:
     def run_crysol_fit(self):
         """Calculation of model fit"""
         if (self.modelName != "" and self.dataName != ""):
-            fitcrysol(self.modelName, self.dataName, "yes", True)
+            #fitcrysol(self.modelName, self.dataName, "yes", True)
+            fitcrysol(self.modelName, self.dataName, self.explicitHydrogens, self.constantSubtraction, "yes", True)
         else:
             print('pdb or SAXS data file is missing!')
             print('model file: {} data file: {}'.format(self.modelName, self.dataName))
@@ -310,6 +338,7 @@ class mpbuilder:
             bestModel, fit, run = crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                                                        dens_min_ang, dens_max_ang, dens_step_ang,
                                                        self.protName, self.membName, self.dataName,
+                                                       self.explicitHydrogens, self.constantSubtraction,
                                                        prefixName, self.runNumber)
 
 
@@ -325,6 +354,7 @@ class mpbuilder:
             bestModel, fit, run = crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                                                      scaffold_min, scaffold_max, scaffold_step,
                                                      self.protName, self.membName, self.scafName, self.dataName,
+                                                     self.explicitHydrogens, self.constantSubtraction,
                                                      prefixName, self.runNumber)
         elif assemblyType == "nanodisc":
             cmd.reset()
@@ -338,6 +368,7 @@ class mpbuilder:
             bestModel, fit, run = crysolRefinementNanodisc(rot_min_ang, rot_max_ang, rot_step_ang,
                                                       y_min, y_max, y_step,
                                                       self.protName, self.membName, self.scafName, self.dataName,
+                                                      self.explicitHydrogens, self.constantSubtraction,
                                                       prefixName, self.runNumber)
         else:
             print("Refinement is not supported for assembly type {}".format(assemblyType))
@@ -494,3 +525,6 @@ class mpbuilder:
         # preOriProt = pre-oriented protein
         self.form.checkBox_3.toggled.connect(self.preOriProt)
         self.form.checkBox_prebuild_bilayer.toggled.connect(self.preBuildBilayer)
+        # CRYSOL options
+        self.form.checkBox_expHyd.toggled.connect(self.explicitHydrogens)
+        self.form.checkBox_const.toggled.connect(self.constantSubtraction)

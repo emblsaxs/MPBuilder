@@ -6,14 +6,34 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>639</width>
-    <height>579</height>
+    <width>576</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string notr="true">PyMOL Membrane Builder Plugin</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <item row="8" column="0">
+    <widget class="QPushButton" name="button_close">
+     <property name="text">
+      <string notr="true">Close</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="checkBox_expHyd">
+     <property name="toolTip">
+      <string>Use if model components are fully hydrogenated...</string>
+     </property>
+     <property name="text">
+      <string>Use Explicit Hydrogens</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
    <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -78,42 +98,15 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="icon">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>280</width>
-       <height>60</height>
-      </size>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">image: url(:/icon2Pref/big_mpbuilder_ic2.png);</string>
+   <item row="6" column="0">
+    <widget class="QCheckBox" name="checkBox_const">
+     <property name="toolTip">
+      <string>Adjusts fit to account for imperfect buffer subtraction...</string>
      </property>
      <property name="text">
-      <string notr="true"/>
+      <string>Use Constant</string>
      </property>
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
-     </property>
-     <property name="pixmap">
-      <pixmap>big_mpbuilder_ic2.png</pixmap>
-     </property>
-     <property name="scaledContents">
-      <bool>true</bool>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="wordWrap">
+     <property name="checked">
       <bool>true</bool>
      </property>
     </widget>
@@ -706,10 +699,53 @@
      </widget>
     </widget>
    </item>
-   <item row="4" column="0">
-    <widget class="QPushButton" name="button_close">
+   <item row="0" column="0">
+    <widget class="QLabel" name="icon">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>280</width>
+       <height>60</height>
+      </size>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">image: url(:/icon2Pref/big_mpbuilder_ic2.png);</string>
+     </property>
      <property name="text">
-      <string notr="true">Close</string>
+      <string notr="true"/>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="pixmap">
+      <pixmap>big_mpbuilder_ic2.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label">
+     <property name="toolTip">
+      <string>Options and flags to set for CRYSOL fitting routine...</string>
+     </property>
+     <property name="text">
+      <string>Fitting Options (CRYSOL)</string>
      </property>
     </widget>
    </item>

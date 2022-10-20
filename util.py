@@ -14,26 +14,33 @@ if platform == 'win32' or platform == 'win64':
 
 
 # run crysol in predictive mode for a given selection
-def predcrysol(modelName, crycalc):
+
+def predcrysol(modelName, explicitHydrogens, constantSubtraction, crycalc):
     """Predicts scattering from the currently active model"""
+
     with tempdir.TemporaryDirectory() as tmpdir:
         if os.path.isfile(modelName + ".pdb"):
             print("Warning: PDB file already exists! Will be rewritten.")
         cmd.save(modelName + ".pdb", modelName)
         pdbFullPath = os.path.abspath(modelName + ".pdb")
         print("{} is saved to {}".format(modelName, pdbFullPath))
+
         if crycalc == "yes":
-            print("CRYSOL calculation using explicit hydrogens")
-            #systemCommand(["crysol", "-eh", pdbFullPath])
-            systemCommand(["crysol", "-explicit-hydrogens", pdbFullPath])
+            if explicitHydrogens and constantSubtraction:
+                systemCommand(["crysol", "--explicit-hydrogens", "--constant", pdbFullPath])
+            elif explicitHydrogens:
+                systemCommand(["crysol", "--explicit-hydrogens", pdbFullPath])
+            elif constantSubtraction:
+                systemCommand(["crysol", "--constant", pdbFullPath])
+            else:
+                systemCommand(["crysol", pdbFullPath])
         else:
             systemCommand(["crysol", pdbFullPath])
-        #result = parseCrysolLog(modelName + "00.log")
+
         print("Modelname for CRYSOL is: " + modelName)
         result = parseCrysolLog(modelName + ".log")
         Rg = result['Rg']
         eDens = result['eDens']
-        #df = tmpdir.move_out_numbered(modelName + "00.int", modelName, '.int')
         df = tmpdir.move_out_numbered(modelName + ".int", modelName, '.int')
 
     print("CRYSOL Theoretical Rg = " + repr(Rg))
@@ -41,10 +48,9 @@ def predcrysol(modelName, crycalc):
     print(".int file written to " + df)
     return df
 
-    # run crysol in fit mode
+# run crysol in fit mode
 
-
-def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
+def fitcrysol(modelName, dataName, explicitHydrogens, constantSubtraction, crycalc, showFit, tmpdir = None):
     if dataName is None:
         print("Please set the SAXS .dat file to fit")
         return False
@@ -57,28 +63,26 @@ def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
     fileFullPath = os.path.abspath(dataName)
     pdbFullPath = os.path.abspath(modelName + ".pdb")
     if tmpdir is None: tmpdir = tempdir.TemporaryDirectory()
-    #with tempdir.TemporaryDirectory() as tmpdir:
+
     if crycalc == "yes":
-        print("CRYSOL calculation using explicit hydrogens")
-        #systemCommand(["crysol", "-eh", pdbFullPath, fileFullPath])
-        systemCommand(["crysol", "-explicit-hydrogens", pdbFullPath, fileFullPath])
+        print("CRYSOL calculation  ...")
+        if explicitHydrogens and constantSubtraction:
+            systemCommand(["crysol", "--explicit-hydrogens", "--constant", pdbFullPath, fileFullPath])
+        elif explicitHydrogens:
+            systemCommand(["crysol", "--explicit-hydrogens", pdbFullPath, fileFullPath])
+        elif constantSubtraction:
+            systemCommand(["crysol", "--constant", pdbFullPath, fileFullPath])
+        else:
+            systemCommand(["crysol", pdbFullPath, fileFullPath])
     else:
         systemCommand(["crysol", pdbFullPath, fileFullPath])
-#    logfile = modelName + "00.log"
+
     logfile = modelName + '_' + dataName[:-4] + ".log"
-#    fitFile = modelName + "00.fit"
     fitFile = modelName + '_' + dataName[:-4] + ".fit"
     fitResult = parseCrysolLog(logfile)
     Rg    = fitResult['Rg']
     chi2  = fitResult['chi2']
     eDens = fitResult['eDens']
-    #df = tmpdir.move_out_numbered(modelName + "00.fit", modelName, '.fit')
-    #fitResult = result
-    #fit = os.path.basename(df)
-    # logfn = tmpdir.move_out_numbered(logfile, fid, '.log')
-
-    #print(".log file written to " + logfile)
-    #print(".fit file written to " + fitfile)
 
     print("CRYSOL Theoretical Rg = " + repr(Rg))
     print("CRYSOL Chi-square = " + repr(chi2))
@@ -91,6 +95,7 @@ def fitcrysol(modelName, dataName, crycalc, showFit, tmpdir = None):
 def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                             scaffold_min, scaffold_max, scaffold_step,
                             protName, membName, scafName, dataName,
+                            explicitHydrogens, constantSubtraction,
                             prefixName, runNumber):
     """Refine the membrane protein lipids scaffolding proteins
      complex against experimental data"""
@@ -111,7 +116,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} num: {}".format(ang, num))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), explicitHydrogens, constantSubtraction, "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(numScaffoldCopies))) +
                            " out of {} steps. Chi2: {}".format(len(numScaffoldCopies) * len(angs), fitResult['chi2']))
@@ -141,7 +146,9 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
 
 def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                               dens_min_ang, dens_max_ang, dens_step_ang,
-                              protName, membName, dataName, prefixName, runNumber):
+                              protName, membName, dataName,
+                              explicitHydrogens, constantSubtraction,
+                              prefixName, runNumber):
     """Refine the membrane protein detergent complex against experimental data"""
     angs = np.arange(rot_min_ang, rot_max_ang, rot_step_ang)
     dens = np.arange(dens_min_ang, dens_max_ang, dens_step_ang)
@@ -161,7 +168,8 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     print("Bad model parameters: ang: {} densAng: {}".format(ang, densAng))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                #fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), explicitHydrogens, constantSubtraction, "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(dens))) +
                            " out of {} steps. Chi2: {}".format(len(dens) * len(angs), fitResult['chi2']))
@@ -191,7 +199,9 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
 
 
 def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
-                             protName, membName, scafName, dataName, prefixName, runNumber):
+                             protName, membName, scafName, dataName,
+                             explicitHydrogens, constantSubtraction,
+                             prefixName, runNumber):
     """Refine the membrane protein detergent complex against experimental data"""
     xs = np.arange(x_min, x_max, x_step)
     ys = np.arange(y_min, y_max, y_step)
@@ -211,7 +221,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     # print("Bad model parameters: " + str(z))
                     continue
                 cmd.save(modelName + ".pdb", modelName)
-                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), "yes", False, tmpdir)
+                fit, fitResult = fitcrysol(modelName, os.path.basename(dataName), explicitHydrogens, constantSubtraction, "yes", False, tmpdir)
                 cmd.wizard("message",
                            "Refinement: {} ".format(1 + counter2 + counter1 * (len(ys))) +
                            " out of {} steps. Chi2: {}".format(len(xs) * len(ys), fitResult['chi2']))
@@ -811,21 +821,32 @@ def parseCrysolLog(logFileName):
     Rg = -9999
     eDens = -9999
 
-    position = -1
-    counter = 0
+#    position = -1
+#    counter = 0
+#    with open(logFileName, 'r') as rf:
+#        for line in rf:
+#            counter += 1
+#            if re.match("(.*)Fitting parameters(.*)", line):
+#                print("line number: " + repr(counter))
+#                position = counter + 2
+#            if counter == position:
+#                if line[66:73] != "*******":
+#                    chi2 = float(line[66:73])
+#            if re.match("(.*)Rg from the slope of net intensity(.*)", line):
+#                Rg = float(line[59:65])
+#            if re.match("(.*)Average electron density(.*)", line):
+#                eDens = float(line[59:66])
+### updated for ATSAS 3.1 (but not using pycrysol yet):
+#Note: CRYSOL from ATSAS 3.1 in FIT mode does not report Rg or electron density in log file!!!
+#(could try and harvest Rg from fit file, but how to get electron density?)
     with open(logFileName, 'r') as rf:
         for line in rf:
-            counter += 1
-            if re.match("(.*)Fitting parameters(.*)", line):
-                print("line number: " + repr(counter))
-                position = counter + 2
-            if counter == position:
-                if line[66:73] != "*******":
-                    chi2 = float(line[66:73])
-            if re.match("(.*)Rg from the slope of net intensity(.*)", line):
-                Rg = float(line[59:65])
-            if re.match("(.*)Average electron density(.*)", line):
-                eDens = float(line[59:66])
+            if re.search("Rg from the slope of net intensity [A] ................. :", line):
+                Rg = float(line[61:65])
+            if re.search("Chi-square of fit ...................................... :", line):
+                chi2 = float(line[60:65])
+            if re.search("Average electron density [e/A^3] ....................... :", line):
+                eDens = float(line[61:66])
     rf.close()
     return {'chi2': chi2, 'Rg': Rg, 'eDens': eDens}
 
