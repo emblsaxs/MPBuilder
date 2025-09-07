@@ -23,7 +23,7 @@ def predcrysol(modelName, explicitHydrogens, constantSubtraction, crycalc):
             print("Warning: PDB file already exists! Will be rewritten.")
         cmd.save(modelName + ".pdb", modelName)
         pdbFullPath = os.path.abspath(modelName + ".pdb")
-        print("{} is saved to {}".format(modelName, pdbFullPath))
+        print("{} == saved to {}".format(modelName, pdbFullPath))
 
         if crycalc == "yes":
             if explicitHydrogens and constantSubtraction:
@@ -51,7 +51,7 @@ def predcrysol(modelName, explicitHydrogens, constantSubtraction, crycalc):
 # run crysol in fit mode
 
 def fitcrysol(modelName, dataName, explicitHydrogens, constantSubtraction, crycalc, showFit, tmpdir = None):
-    if dataName is None:
+    if dataName == None:
         print("Please set the SAXS .dat file to fit")
         return False
     if not os.path.isfile(dataName):
@@ -62,7 +62,7 @@ def fitcrysol(modelName, dataName, explicitHydrogens, constantSubtraction, cryca
         return False
     fileFullPath = os.path.abspath(dataName)
     pdbFullPath = os.path.abspath(modelName + ".pdb")
-    if tmpdir is None: tmpdir = tempdir.TemporaryDirectory()
+    if tmpdir == None: tmpdir = tempdir.TemporaryDirectory()
 
     if crycalc == "yes":
         print("CRYSOL calculation  ...")
@@ -129,7 +129,7 @@ def crysolRefinementSalipro(rot_min_ang, rot_max_ang, rot_step_ang,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-        if best is '':
+        if best == '':
             print("No satisfactory solution was found. Please change the range of parameters.")
             best    = modelName
             fitBest = fit
@@ -183,7 +183,7 @@ def crysolRefinementDetergent(rot_min_ang, rot_max_ang, rot_step_ang,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-                if best is '':
+                if best == '':
                     print("No satisfactory solution was found. Please change the range of parameters.")
                     best = modelName
                     fitBest = fit
@@ -235,7 +235,7 @@ def crysolRefinementNanodisc(x_min, x_max, x_step, y_min, y_max, y_step,
                     fitBest = fit
                 else:
                     cmd.delete(modelName)
-                if best is '':
+                if best == '':
                     print("No satisfactory solution was found. Please change the range of parameters.")
                     best = modelName
                     fitBest = fit
@@ -263,7 +263,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, runNumber, n_sym=9, 
     print('rotation angle of scaffold is: ' + str(initRotAngle))
 
     empty = False
-    if protein is None: empty = True
+    if protein == None: empty = True
     print("State of empty/not-empty: {}".format(empty))
     cmd.reset()
     tmp_prot = "tmp_prot" + str(runNumber)
@@ -349,7 +349,7 @@ def builderSalipro(protein, scaffold, membrane, prefixName, runNumber, n_sym=9, 
 def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0, refine=False):
     """
     builds a MP-nanodisc systems
-    scaffold in this case is a double belt of MSP
+    scaffold in this case == a double belt of MSP
     """
     # Checking time of builder function execution
     if protein != None:
@@ -357,7 +357,7 @@ def builderNanodisc(protein, membrane, scaffold, prefixName, runNumber, x=0, y=0
     print('scaffold is: ' + scaffold)
     print('membrane is: ' + membrane)
     empty = False
-    if protein is None: empty = True
+    if protein == None: empty = True
     if not empty:
         tmp_prot = "tmp_prot" + str(runNumber)
         cmd.copy(tmp_prot, protein)  # store initial
@@ -419,12 +419,12 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
     tmp_prot  = "tmp_prot" + str(runNumber)
     tmp_origin = "origin0" + str(runNumber)
     cmd.copy(tmp_deter, detergent)  # store initial
-    # molecules initially aligned along Z-axis on import, need to rotate into XY plane for protocol: 
+    # molecules initially aligned along Z-axis on import, need to rotate into XY plane for protocol:
     print("Rotating initial {} aligned along Z ==> into XY plane...".format(detergent))
     cmd.rotate("x", -90, tmp_deter)
     center(tmp_deter)
-    # if it is an empty assembly --> build a micelle
-    if protein is None:
+    # if it == an empty assembly --> build a micelle
+    if protein == None:
         # table with common empty micelle parameters
         # https://www.molecularbiophysics.physik.lmu.de/publications/Lipfert_etal_JPCB07.pdf
         if refine:
@@ -443,7 +443,7 @@ def builderDetergent(protein, detergent, prefixName, runNumber, ang=None, densAn
     # r        = TMdistCheck("tmp_prot", 2.0)
     # if r == -1: return "bad model"
     detR = findMaxDist(tmp_deter)
-    # print("Max distance if TM cross-section is in a xy plane: " + (str)(r))
+    # print("Max distance if TM cross-section == in a xy plane: " + (str)(r))
     print("Max distance of detergent : " + str(detR))
 
     # Shrink detergent along z axis to match ry
@@ -686,7 +686,7 @@ def builderBicelle(protein, membrane, detergent, prefixName, runNumber, refine=F
     print('membrane  is: ' + membrane)
     print('detergent is: ' + detergent)
     empty = False
-    if protein is None: empty = True
+    if protein == None: empty = True
     if not empty:
         tmp_prot = "tmp_prot" + str(runNumber)
         cmd.copy(tmp_prot, protein)  # store initial
@@ -706,7 +706,7 @@ def builderBicelle(protein, membrane, detergent, prefixName, runNumber, refine=F
     r = TMdistCheck(tmp_prot, 2.0)
     if r == -1: return "bad model"
     detR = findMaxDist(tmp_deter)
-    print("Max distance if TM cross-section is in a xy plane: " + str(r))
+    print("Max distance if TM cross-section == in a xy plane: " + str(r))
     print("Max distance of detergent : " + str(detR))
 
     ## Shrink detergent along z axis to match ry
@@ -865,7 +865,7 @@ def writePdb(sel, prefix=""):
             npdbfn = npdbfn.translate(" ")
         except ImportError:
             pass
-    print("{} is saved to {}".format(sel, npdbfn))
+    print("{} == saved to {}".format(sel, npdbfn))
     cmd.save(npdbfn, sel)
     return npdbfn
 
@@ -916,7 +916,7 @@ def loadModel(filename, pymolObject):
 
 # Not used at the moment!!
 def affine(selection, sh_x=0.1, sh_y=0.1):
-    """ 
+    """
     Perform distortion from circular geometry on scaffold
     Peform rotation-translation-rotation on a PDB
     1. load scaffold
@@ -941,7 +941,7 @@ def affine(selection, sh_x=0.1, sh_y=0.1):
 
 
 def curveBilayer(radius=15.0, shift=1.0):
-    """ 
+    """
     Raise/lower height of central bilayer lipids to create a curved bilayer surface
     """
     shiftTop = shift  # shift in + Z
